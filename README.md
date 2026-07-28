@@ -13,75 +13,47 @@ Cooking Thozhan is an AI-powered recipe finder that helps users discover delicio
 <dd>
 Select the ingredients available in your kitchen and instantly discover recipes you can prepare, helping reduce food waste and simplify meal planning.
 </dd>
-
 <br>
-
 <dt><strong>🍽️ Personalized Recipe Recommendations</strong></dt>
 <dd>
 Receive carefully curated recipe suggestions based on your selected ingredients and explore dishes that match your preferences.
 </dd>
-
 <br>
-
 <dt><strong>🛒 Smart Grocery List Generator</strong></dt>
 <dd>
 Automatically identifies the missing ingredients for your chosen recipe and generates a printable and shareable grocery list for your next shopping trip.
 </dd>
-
 <br>
-
 <dt><strong>🤖 Chef Tara AI Assistant (Beta)</strong></dt>
 <dd>
 An AI-powered cooking companion that provides cooking guidance through built-in recommended questions. Chef Tara is actively being enhanced with smarter conversational capabilities and more personalized assistance.
 </dd>
-
 <br>
-
 <dt><strong>❤️ Favourite Recipes</strong></dt>
 <dd>
 Save your favourite recipes and access them anytime without searching again.
 </dd>
-
 <br>
-
 <dt><strong>🎲 Surprise Me</strong></dt>
 <dd>
 Can't decide what to cook? Let Cooking Thozhan randomly recommend a recipe and inspire your next meal.
 </dd>
-
 <br>
-
 <dt><strong>📱 Responsive & Modern Interface</strong></dt>
 <dd>
 Designed with a clean, responsive interface that provides a seamless experience across desktop, tablet, and mobile devices.
 </dd>
-
 <br>
-
 <dt><strong>⚡ Fast & Scalable</strong></dt>
 <dd>
 Built with a structured architecture that makes it easy to expand the recipe collection, introduce new features, and continuously improve the platform.
 </dd>
-
 <br>
-
 <dt><strong>🚀 Continuous Development</strong></dt>
 <dd>
 Cooking Thozhan is an evolving project with planned enhancements including a more capable Chef Tara, advanced recipe recommendations, nutrition insights, and additional smart cooking tools.
 </dd>
-
 </dl>
----
-## 🌟 Features
-
-- 🥘 212+ Curated Recipes
-- 🤖 Chef Tara AI Assistant
-- 🔍 Smart Ingredient-Based Recipe Search
-- ❤️ Save Favourite Recipes
-- 🎲 "Surprise Me" Recipe Generator
-- 📂 Browse by Categories
-- 📱 Responsive Design
-- 🌙 Modern & Clean User Interface
 
 ---
 

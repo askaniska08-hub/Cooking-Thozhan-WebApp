@@ -5,7 +5,7 @@
 Cooking Thozhan is an AI-powered recipe finder that helps users discover delicious recipes using the ingredients they already have. It also features **Chef Tara**, an AI recipe assistant designed to guide users through inbuilt recipes.
 
 ---
-<h2>🍳 About Cooking Thozhan</h2>
+<h2>Why Cooking Thozhan ?</h2>
 
 <dl>
 

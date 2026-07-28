@@ -118,9 +118,9 @@ This project was developed using **AI-assisted development with Bolt.new**.
 
 Cooking Thozhan began as a simple Python-based recipe management project while I was learning programming. As my skills grew, I reimagined it as a modern web application using React, TypeScript, and Tailwind CSS with AI-assisted development in Bolt.new.
 
-The project evolved from a command-line application into a responsive recipe platform featuring ingredient-based recipe search, favourites, and Chef Tara, an AI cooking assistant.
+The project evolved from a command-line application into a responsive recipe platform featuring ingredient-based recipe search, favourites, and Chef Tara, an AI recipe assistant.
 
-This project reflects my learning journey—from Python fundamentals to modern web development and AI-assisted software engineering.
+This project reflects my learning journey from Python fundamentals to modern web development and AI-assisted software engineering.
 
 ---
 

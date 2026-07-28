@@ -21,14 +21,14 @@ Cooking Thozhan is an AI-powered recipe finder that helps users discover delicio
 
 ## 📸 Preview
 
-> *(<img width="1917" height="1011" alt="image" src="https://github.com/user-attachments/assets/9bd6f2ac-2090-4b61-ab02-ba1f4b938905" />
-)*
+> *<img width="1917" height="1011" alt="image" src="https://github.com/user-attachments/assets/9bd6f2ac-2090-4b61-ab02-ba1f4b938905" />
+*
 
 ---
 
 ## 🚀 Live Demo
 
-🔗 **Website:** *[(Add your Bolt deployment link here)](https://cooking-thozhan-ai-r-8sgt.bolt.host)*
+🔗 **Website:** *[(Cooking Thozhan)](https://cooking-thozhan-ai-r-8sgt.bolt.host)*
 
 ---
 
@@ -77,13 +77,13 @@ Cooking-Thozhan/
 Clone the repository
 
 ```bash
-git clone https://github.com/askaniska08-hub/Cooking-Thozhan.git
+git clone https://github.com/askaniska08-hub/Cooking-Thozhan-WebApp.git
 ```
 
 Navigate to the project
 
 ```bash
-cd Cooking-Thozhan
+cd Cooking-Thozhan-WebApp
 ```
 
 Install dependencies
@@ -116,6 +116,7 @@ npm run dev
 ## 📖 Project Journey
 
 This project was developed using **AI-assisted development with Bolt.new**.
+
 Cooking Thozhan began as a simple Python-based recipe management project while I was learning programming. As my skills grew, I reimagined it as a modern web application using React, TypeScript, and Tailwind CSS with AI-assisted development in Bolt.new.
 
 The project evolved from a command-line application into a responsive recipe platform featuring ingredient-based recipe search, favourites, and Chef Tara, an AI cooking assistant.
@@ -137,7 +138,7 @@ Feel free to fork the repository and submit a pull request.
 **A S Kaniska**
 
 - GitHub: https://github.com/askaniska08-hub
-- LinkedIn: *[(Add your LinkedIn profile here)](https://www.linkedin.com/in/a-s-kaniska/)*
+- LinkedIn: https://www.linkedin.com/in/a-s-kaniska/
 
 ---
 

@@ -63,7 +63,7 @@ Cooking Thozhan is an evolving project with planned enhancements including a mor
 
 ---
 
-🚀 Live Demo
+**🚀 Live Demo**
 
 🔗 **Website:** *[Cooking Thozhan](https://cooking-thozhan-ai-r-8sgt.bolt.host)*
 

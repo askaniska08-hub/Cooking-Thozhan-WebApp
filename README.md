@@ -21,8 +21,7 @@ Cooking Thozhan is an AI-powered recipe finder that helps users discover delicio
 
 ## 📸 Preview
 
-> *<img width="1917" height="1011" alt="image" src="https://github.com/user-attachments/assets/9bd6f2ac-2090-4b61-ab02-ba1f4b938905" />
-*
+> <img width="1917" height="1011" alt="image" src="https://github.com/user-attachments/assets/9bd6f2ac-2090-4b61-ab02-ba1f4b938905" />
 
 ---
 

@@ -2,7 +2,10 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import { FavoritesProvider } from '@/context/FavoritesContext';
+import { logValidationIssues } from '@/data/recipeValidator';
 import './index.css';
+
+logValidationIssues();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

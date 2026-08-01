@@ -160,6 +160,7 @@ export default function App() {
 
       <RecipeModal
         recipe={activeRecipe}
+        selectedIngredients={selected}
         isFavorite={activeRecipeFavorite}
         onClose={() => setActiveRecipe(null)}
         onToggleFavorite={() => activeRecipe && toggleFavorite(activeRecipe.id)}

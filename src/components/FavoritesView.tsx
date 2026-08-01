@@ -71,7 +71,7 @@ export function FavoritesView({
       ) : (
         <motion.div
           layout
-          className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+          className="grid grid-cols-1 items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
         >
           {favRecipes.map((r, i) => (
             <RecipeCard
@@ -96,7 +96,7 @@ export function FavoritesView({
           <h3 className="mb-4 flex items-center gap-2 font-display text-2xl font-bold text-ink dark:text-white">
             <span aria-hidden>🕑</span> Recently Viewed
           </h3>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid grid-cols-1 items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {recentRecipes.map((r, i) => (
               <RecipeCard
                 key={r.id}

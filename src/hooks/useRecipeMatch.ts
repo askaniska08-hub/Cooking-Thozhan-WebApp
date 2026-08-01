@@ -1,11 +1,5 @@
 import type { Recipe, RecipeWithMatch } from '@/types';
-import { PANTRY_STAPLES, PANTRY_OPTIONAL } from '@/data/ingredients';
-
-const PANTRY_ALL = new Set<string>([...PANTRY_STAPLES, ...PANTRY_OPTIONAL]);
-
-function norm(s: string): string {
-  return s.toLowerCase();
-}
+import { isIngredientAvailable, normalizeIngredient } from '@/utils';
 
 function computeStars(match: number): number {
   if (match >= 100) return 5;
@@ -15,20 +9,23 @@ function computeStars(match: number): number {
 }
 
 export function computeMatch(recipe: Recipe, selected: string[]): RecipeWithMatch | null {
-  const selectedSet = new Set(selected.map(norm));
-  const mustOk = recipe.must.every((m) => selectedSet.has(norm(m)) || PANTRY_ALL.has(m));
+  // All "must" ingredients must be available (selected or pantry)
+  const mustOk = recipe.must.every((m) => isIngredientAvailable(m, selected));
   if (!mustOk) return null;
 
   const matched: string[] = [];
   const missing: string[] = [];
+
   recipe.ingredients.forEach((ing) => {
-    if (PANTRY_ALL.has(ing)) return; // pantry items are always "available"
-    if (selectedSet.has(norm(ing))) matched.push(ing);
-    else missing.push(ing);
+    if (isIngredientAvailable(ing, selected)) {
+      matched.push(ing);
+    } else {
+      missing.push(ing);
+    }
   });
 
-  const totalIng = recipe.ingredients.filter((i) => !PANTRY_ALL.has(i)).length || 1;
-  const matchPercent = Math.min(100, Math.max(0, Math.round((matched.length / totalIng) * 100)));
+  // Match percent is based on ALL ingredients (pantry items count as available)
+  const matchPercent = Math.min(100, Math.max(0, Math.round((matched.length / (recipe.ingredients.length || 1)) * 100)));
 
   return {
     ...recipe,

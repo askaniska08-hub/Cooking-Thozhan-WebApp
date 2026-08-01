@@ -7,11 +7,11 @@ import {
 import type { RecipeWithMatch } from '@/types';
 import { Stars } from './ui/Stars';
 import { RippleButton } from './ui/RippleButton';
-import { cn } from '@/utils';
-import { pluralize } from '@/utils';
+import { cn, pluralize, isIngredientAvailable } from '@/utils';
 
 interface RecipeModalProps {
   recipe: RecipeWithMatch | null;
+  selectedIngredients: string[];
   isFavorite: boolean;
   onClose: () => void;
   onToggleFavorite: () => void;
@@ -25,16 +25,18 @@ const diffColor: Record<string, string> = {
   Hard: 'text-red-600 bg-red-100 dark:bg-red-500/15',
 };
 
-export function RecipeModal({ recipe, isFavorite, onClose, onToggleFavorite, onCookAnother, onAskTara }: RecipeModalProps) {
+export function RecipeModal({ recipe, selectedIngredients, isFavorite, onClose, onToggleFavorite, onCookAnother, onAskTara }: RecipeModalProps) {
   const [copied, setCopied] = useState(false);
   const [shared, setShared] = useState(false);
 
+  const missing = recipe ? recipe.ingredients.filter((ing) => !isIngredientAvailable(ing, selectedIngredients)) : [];
+
   const shoppingText = recipe
-    ? `Shopping list for ${recipe.name}:\n${recipe.missing.map((m) => `• ${m}`).join('\n')}`
+    ? `Shopping list for ${recipe.name}:\n${missing.map((m) => `• ${m}`).join('\n')}`
     : '';
 
   const copyShoppingList = () => {
-    if (!recipe || recipe.missing.length === 0) return;
+    if (!recipe || missing.length === 0) return;
     navigator.clipboard?.writeText(shoppingText).then(() => {
       setCopied(true);
       window.setTimeout(() => setCopied(false), 2000);
@@ -42,7 +44,7 @@ export function RecipeModal({ recipe, isFavorite, onClose, onToggleFavorite, onC
   };
 
   const shareShoppingList = async () => {
-    if (!recipe || recipe.missing.length === 0) return;
+    if (!recipe || missing.length === 0) return;
     if (navigator.share) {
       try {
         await navigator.share({ title: `Shopping list — ${recipe.name}`, text: shoppingText });
@@ -57,10 +59,10 @@ export function RecipeModal({ recipe, isFavorite, onClose, onToggleFavorite, onC
   };
 
   const printShoppingList = () => {
-    if (!recipe || recipe.missing.length === 0) return;
+    if (!recipe || missing.length === 0) return;
     const win = window.open('', '_blank', 'width=400,height=600');
     if (!win) return;
-    win.document.write(`<html><head><title>Shopping List — ${recipe.name}</title><style>body{font-family:system-ui,sans-serif;padding:32px}h1{font-size:20px}ul{font-size:16px;line-height:1.8}</style></head><body><h1>Shopping List — ${recipe.name}</h1><ul>${recipe.missing.map((m) => `<li>${m}</li>`).join('')}</ul></body></html>`);
+    win.document.write(`<html><head><title>Shopping List — ${recipe.name}</title><style>body{font-family:system-ui,sans-serif;padding:32px}h1{font-size:20px}ul{font-size:16px;line-height:1.8}</style></head><body><h1>Shopping List — ${recipe.name}</h1><ul>${missing.map((m) => `<li>${m}</li>`).join('')}</ul></body></html>`);
     win.document.close();
     win.focus();
     win.print();
@@ -160,7 +162,7 @@ export function RecipeModal({ recipe, isFavorite, onClose, onToggleFavorite, onC
                 </h3>
                 <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
                   {recipe.ingredients.map((ing) => {
-                    const have = recipe.matched.includes(ing);
+                    const have = isIngredientAvailable(ing, selectedIngredients);
                     return (
                       <div
                         key={ing}
@@ -181,7 +183,7 @@ export function RecipeModal({ recipe, isFavorite, onClose, onToggleFavorite, onC
               </section>
 
               {/* Shopping list */}
-              {recipe.missing.length > 0 && (
+              {missing.length > 0 && (
                 <motion.section
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -191,7 +193,7 @@ export function RecipeModal({ recipe, isFavorite, onClose, onToggleFavorite, onC
                   <div className="flex items-center justify-between gap-3">
                     <h4 className="flex items-center gap-2 font-display text-base font-bold text-ink dark:text-white">
                       <ShoppingBasket size={16} className="text-primary" /> Shopping List
-                      <span className="rounded-full bg-primary/15 px-2 py-0.5 text-xs text-primary">{recipe.missing.length}</span>
+                      <span className="rounded-full bg-primary/15 px-2 py-0.5 text-xs text-primary">{missing.length}</span>
                     </h4>
                     <div className="flex flex-wrap items-center gap-2">
                       <RippleButton
@@ -217,7 +219,7 @@ export function RecipeModal({ recipe, isFavorite, onClose, onToggleFavorite, onC
                     </div>
                   </div>
                   <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                    {recipe.missing.join(', ')}
+                    {missing.join(', ')}
                   </p>
                 </motion.section>
               )}

@@ -4,8 +4,7 @@ import type { RecipeWithMatch } from '@/types';
 import { MatchRing } from './ui/MatchRing';
 import { Stars } from './ui/Stars';
 import { RippleButton } from './ui/RippleButton';
-import { pluralize } from '@/utils';
-import { cn } from '@/utils';
+import { pluralize, cn } from '@/utils';
 
 interface RecipeCardProps {
   recipe: RecipeWithMatch;
@@ -30,11 +29,11 @@ export function RecipeCard({ recipe, isFavorite, onView, onToggleFavorite, onAsk
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.4, delay: Math.min(index * 0.05, 0.4) }}
       whileHover={{ y: -6 }}
-      className="group relative flex flex-col overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-soft transition-shadow hover:shadow-card dark:border-white/10 dark:bg-white/5"
+      className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-soft transition-shadow hover:shadow-card dark:border-white/10 dark:bg-white/5"
     >
       {/* Header band */}
       <div className="relative flex items-center justify-between gap-3 bg-gradient-to-br from-primary/15 via-cream to-accent/10 p-4 dark:from-primary/20 dark:to-accent/10">
-        <div className="flex items-center gap-3">
+        <div className="flex min-w-0 items-center gap-3">
           <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-white text-3xl shadow-soft dark:bg-white/10" aria-hidden>
             {recipe.emoji}
           </span>
@@ -46,6 +45,7 @@ export function RecipeCard({ recipe, isFavorite, onView, onToggleFavorite, onAsk
         <MatchRing percent={recipe.matchPercent} />
       </div>
 
+      {/* Body — flex-1 so it grows, pushing buttons to bottom */}
       <div className="flex flex-1 flex-col p-4">
         {/* Meta: time, difficulty, servings, stars */}
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-600 dark:text-gray-300">
@@ -61,13 +61,13 @@ export function RecipeCard({ recipe, isFavorite, onView, onToggleFavorite, onAsk
           <Stars count={recipe.stars} size={14} />
         </div>
 
-        {/* Description */}
-        <p className="mt-3 line-clamp-2 text-sm leading-relaxed text-gray-600 dark:text-gray-400">
+        {/* Description — clamped to 2 lines, fixed height */}
+        <p className="mt-3 line-clamp-2 min-h-[2.5rem] text-sm leading-relaxed text-gray-600 dark:text-gray-400">
           {recipe.description}
         </p>
 
-        {/* Missing ingredients */}
-        <div className="mt-3">
+        {/* Missing ingredients — fixed height area, max 3 + "more" */}
+        <div className="mt-3 min-h-[2rem]">
           {recipe.missing.length === 0 ? (
             <p className="inline-flex items-center gap-1.5 text-sm font-semibold text-accent">
               <CheckCircle2 size={15} /> All ingredients ready!
@@ -78,14 +78,14 @@ export function RecipeCard({ recipe, isFavorite, onView, onToggleFavorite, onAsk
                 <AlertCircle size={13} /> Missing {pluralize(recipe.missing.length, 'item')}:
               </p>
               <div className="mt-1.5 flex flex-wrap gap-1.5">
-                {recipe.missing.slice(0, 4).map((m) => (
+                {recipe.missing.slice(0, 3).map((m) => (
                   <span key={m} className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600 dark:bg-white/10 dark:text-gray-300">
                     {m}
                   </span>
                 ))}
-                {recipe.missing.length > 4 && (
+                {recipe.missing.length > 3 && (
                   <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-500 dark:bg-white/10 dark:text-gray-400">
-                    +{recipe.missing.length - 4} more
+                    +{recipe.missing.length - 3} more
                   </span>
                 )}
               </div>
@@ -93,7 +93,8 @@ export function RecipeCard({ recipe, isFavorite, onView, onToggleFavorite, onAsk
           )}
         </div>
 
-        <div className="mt-4 flex items-center gap-2 pt-2">
+        {/* Buttons — pinned to bottom via mt-auto */}
+        <div className="mt-auto flex items-center gap-2 pt-4">
           <RippleButton onClick={onView} className="btn-primary flex-1 px-4 py-2.5 text-sm">
             <ChefHat size={16} /> View Recipe
           </RippleButton>

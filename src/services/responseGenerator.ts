@@ -23,6 +23,7 @@ import { RECIPES } from '@/data/recipes';
 import { INGREDIENTS } from '@/data/ingredients';
 import { searchKnowledge } from '@/data/cookingKnowledge';
 import type { Recipe } from '@/types';
+import { isIngredientAvailable, normalizeIngredient } from '@/utils';
 import { detectIntent, findRecipeInQuery, type TaraIntent } from './intentDetector';
 import {
   type ConversationContext,
@@ -52,7 +53,7 @@ export interface TaraResponse {
   tip?: string;
 }
 
-const INGREDIENT_LOWER = new Map(INGREDIENTS.map((i) => [i.name.toLowerCase(), i.name]));
+const INGREDIENT_LOWER = new Map(INGREDIENTS.map((i) => [normalizeIngredient(i.name), i.name]));
 
 const CATEGORIES = [
   'Rice Dishes', 'Breakfast', 'Bread Recipes', 'Sandwiches',
@@ -84,7 +85,7 @@ export function getRandomTip(): string {
 }
 
 function normalize(s: string): string {
-  return s.toLowerCase().trim().replace(/\s+/g, ' ');
+  return normalizeIngredient(s);
 }
 
 function levenshtein(a: string, b: string): number {
@@ -166,18 +167,18 @@ function findFuzzyRecipes(query: string): Recipe[] {
 }
 
 export function searchByIngredient(ingredient: string): Recipe[] {
-  const lower = ingredient.toLowerCase();
+  const norm = normalizeIngredient(ingredient);
   return RECIPES.filter((r) =>
-    r.ingredients.some((i) => i.toLowerCase() === lower) ||
-    r.must.some((m) => m.toLowerCase() === lower),
+    r.ingredients.some((i) => normalizeIngredient(i) === norm) ||
+    r.must.some((m) => normalizeIngredient(m) === norm),
   );
 }
 
 export function searchByMultipleIngredients(ingredients: string[]): TaraRecipeResult[] {
-  const lowerSet = new Set(ingredients.map((i) => i.toLowerCase()));
+  const normSet = new Set(ingredients.map(normalizeIngredient));
   const results = RECIPES.map((r) => {
-    const matched = r.ingredients.filter((i) => lowerSet.has(i.toLowerCase()));
-    const missing = r.ingredients.filter((i) => !lowerSet.has(i.toLowerCase()));
+    const matched = r.ingredients.filter((i) => normSet.has(normalizeIngredient(i)));
+    const missing = r.ingredients.filter((i) => !normSet.has(normalizeIngredient(i)));
     const matchPercent = Math.round((matched.length / (r.ingredients.length || 1)) * 100);
     return { r, matched, missing, matchPercent };
   })
@@ -451,9 +452,8 @@ function handleRecipeInfo(query: string, context: ConversationContext): TaraResp
  */
 function formatRecipeCard(recipe: Recipe, context: ConversationContext): TaraResponse {
   const mentioned = context.mentionedIngredients.length > 0 ? context.mentionedIngredients : extractIngredients(recipe.name);
-  const lowerMentioned = new Set(mentioned.map((m) => m.toLowerCase()));
-  const matched = recipe.ingredients.filter((i) => lowerMentioned.has(i.toLowerCase()));
-  const missing = recipe.ingredients.filter((i) => !lowerMentioned.has(i.toLowerCase()));
+  const matched = recipe.ingredients.filter((i) => isIngredientAvailable(i, mentioned));
+  const missing = recipe.ingredients.filter((i) => !isIngredientAvailable(i, mentioned));
   const matchPercent = mentioned.length > 0 ? Math.round((matched.length / recipe.ingredients.length) * 100) : 0;
 
   const matchLine = mentioned.length > 0
@@ -496,8 +496,8 @@ function handleMissingIngredients(query: string, context: ConversationContext): 
 
   const recipe = found.recipe;
   const mentioned = context.mentionedIngredients.length > 0 ? context.mentionedIngredients : extractIngredients(query);
-  const lowerMentioned = new Set(mentioned.map((m) => m.toLowerCase()));
-  const missing = recipe.ingredients.filter((i) => !lowerMentioned.has(i.toLowerCase()));
+  const matched = recipe.ingredients.filter((i) => isIngredientAvailable(i, mentioned));
+  const missing = recipe.ingredients.filter((i) => !isIngredientAvailable(i, mentioned));
 
   if (missing.length === 0) {
     return {
@@ -507,7 +507,7 @@ function handleMissingIngredients(query: string, context: ConversationContext): 
   }
 
   return {
-    text: `🛒 For **${recipe.name}**, you're still missing:\n\n${missing.map((m) => `• ${m}`).join('\n')}\n\nYou already have: ${recipe.ingredients.filter((i) => lowerMentioned.has(i.toLowerCase())).join(', ') || 'none mentioned yet'}.\n\nWant me to add these to a shopping list? Just say "add to shopping list"!`,
+    text: `🛒 For **${recipe.name}**, you're still missing:\n\n${missing.map((m) => `• ${m}`).join('\n')}\n\nYou already have: ${matched.join(', ') || 'none mentioned yet'}.\n\nWant me to add these to a shopping list? Just say "add to shopping list"!`,
     recipes: [toResult(recipe, { missing })],
   };
 }
@@ -543,8 +543,7 @@ function handleShoppingList(context: ConversationContext): TaraResponse {
   if (!recipe) return fallbackResponse();
 
   const mentioned = context.mentionedIngredients;
-  const lowerMentioned = new Set(mentioned.map((m) => m.toLowerCase()));
-  const missing = recipe.ingredients.filter((i) => !lowerMentioned.has(i.toLowerCase()));
+  const missing = recipe.ingredients.filter((i) => !isIngredientAvailable(i, mentioned));
 
   return {
     text: `🛒 **Shopping List for ${recipe.name}:**\n\n${missing.map((m) => `☐ ${m}`).join('\n')}\n\nTake this to the store and you'll be ready to cook! 🛍️`,

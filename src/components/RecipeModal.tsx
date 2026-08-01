@@ -184,6 +184,17 @@ export function RecipeModal({ recipe, selectedIngredients, isFavorite, onClose, 
                 {recipe.description}
               </p>
               {/* Ingredients */}
+              {(() => {
+                const available = recipe.ingredients.filter((i) => isIngredientAvailable(i, selectedIngredients));
+                const missingFromRecipe = recipe.ingredients.filter((i) => !isIngredientAvailable(i, selectedIngredients));
+                console.log('[RecipeModal Debug]', recipe.name, {
+                  'Selected Ingredients': selectedIngredients,
+                  'Recipe Ingredients': recipe.ingredients,
+                  'Available': available,
+                  'Missing': missingFromRecipe,
+                });
+                return null;
+              })()}
               <section>
                 <h3 className="flex items-center gap-2 font-display text-lg font-bold text-ink dark:text-white">
                   <ChefHat size={18} className="text-primary" /> Ingredients

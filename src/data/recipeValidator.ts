@@ -1,5 +1,5 @@
 import { RECIPES } from '@/data/recipes';
-import { INGREDIENTS, PANTRY_STAPLES, PANTRY_OPTIONAL } from '@/data/ingredients';
+import { INGREDIENTS, PANTRY_STAPLES } from '@/data/ingredients';
 import { isKnownIngredient, normalizeIngredient, isIngredientAvailable } from '@/utils';
 import type { Difficulty } from '@/types';
 
@@ -204,7 +204,6 @@ export function logValidationIssues(): void {
   console.groupEnd();
 
   console.info(`Pantry staples: ${[...PANTRY_STAPLES].join(', ')}`);
-  console.info(`Pantry optional: ${[...PANTRY_OPTIONAL].join(', ')}`);
   console.groupEnd();
 }
 

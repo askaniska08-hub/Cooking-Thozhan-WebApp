@@ -1,4 +1,4 @@
-import { INGREDIENTS, PANTRY_STAPLES, PANTRY_OPTIONAL, INGREDIENT_ALIASES } from '@/data/ingredients';
+import { INGREDIENTS, PANTRY_STAPLES, INGREDIENT_ALIASES } from '@/data/ingredients';
 
 /**
  * Normalize an ingredient name for reliable comparison.
@@ -21,7 +21,6 @@ export function normalizeIngredient(name: string): string {
 const INGREDIENT_SET = new Set(INGREDIENTS.map((i) => normalizeIngredient(i.name)));
 const PANTRY_ALL = new Set<string>([
   ...[...PANTRY_STAPLES].map(normalizeIngredient),
-  ...[...PANTRY_OPTIONAL].map(normalizeIngredient),
 ]);
 
 // Normalized alias map for O(1) lookup

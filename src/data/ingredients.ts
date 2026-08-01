@@ -123,8 +123,6 @@ export const PANTRY_STAPLES = new Set([
   'Curry Leaves',
 ]);
 
-export const PANTRY_OPTIONAL = new Set(['Ghee']);
-
 /**
  * Maps common ingredient aliases, spelling variations, and plural forms
  * to the canonical ingredient name used in the master list.

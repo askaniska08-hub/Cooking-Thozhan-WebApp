@@ -2,13 +2,12 @@ import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X, Clock, Flame, Users, ArrowLeft, ChefHat, Check, ShoppingBasket,
-  Copy, CheckCheck, Heart, ListOrdered, MessageCircle, Share2, Printer,
+  Copy, CheckCheck, Heart, ListOrdered, MessageCircle, Share2, Printer, Sparkles,
 } from 'lucide-react';
 import type { RecipeWithMatch } from '@/types';
 import { Stars } from './ui/Stars';
 import { RippleButton } from './ui/RippleButton';
 import { cn, pluralize, getIngredientStatus } from '@/utils';
-import { Check, X, ChefHat, ShoppingBasket, Copy, CheckCheck, Heart, ListOrdered, MessageCircle, Share2, Printer, Sparkles } from 'lucide-react';
 
 interface RecipeModalProps {
   recipe: RecipeWithMatch | null;

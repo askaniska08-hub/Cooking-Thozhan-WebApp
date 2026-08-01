@@ -792,7 +792,7 @@ export const batch2: Recipe[] = [
   {
     id: 'beetroot-masala',
     name: 'Beetroot Masala',
-    emoji: '🫷',
+    emoji: '🟣',
     category: 'Curries & Gravies',
     description: 'Grated beetroot cooked with onions and spices.',
     must: ['Beetroot', 'Onion', 'Turmeric'],

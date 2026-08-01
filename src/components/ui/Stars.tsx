@@ -20,6 +20,7 @@ export function Stars({ count, className, size = 16 }: StarsProps) {
         >
           <Star
             size={size}
+            aria-hidden="true"
             className={i < count ? 'fill-amber-400 text-amber-400' : 'fill-transparent text-gray-300 dark:text-gray-600'}
           />
         </motion.span>

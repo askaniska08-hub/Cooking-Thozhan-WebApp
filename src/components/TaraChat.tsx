@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Send, Sparkles, RotateCcw, User, ChefHat, Lightbulb } from 'lucide-react';
+import { X, Send, RotateCcw, User, ChefHat, Lightbulb } from 'lucide-react';
 import type { ChatMessage, TaraRecipeResult } from '@/types';
 import { processQuery, getSuggestionSet } from '@/services/responseGenerator';
 import { detectIntent } from '@/services/intentDetector';
@@ -30,12 +30,12 @@ const GREETING: ChatMessage = {
   id: 'greeting',
   role: 'assistant',
   content:
-    "👋 Hi! I'm Chef Tara.\n\nTell me what ingredients you have, what you're craving, or ask me anything about cooking!\n\nI'm here to help you cook.",
+    "👋 Hi!\nI'm TARA, your AI cooking companion.\n\nTell me what ingredients you have, ask for recipes, cooking tips, or anything food-related.\n\nWhy fear when your THOZHAN is here! 🍛",
   timestamp: Date.now(),
 };
 
 export function TaraChat({ open, onClose, onRecipeClick, initialQuestion }: TaraChatProps) {
-  const { favorites, recent, isLoaded, toggleFavorite, isFavorite } = useFavorites();
+  const { favorites, recent, isLoaded } = useFavorites();
   const [messages, setMessages] = useState<ChatMessage[]>([GREETING]);
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
@@ -141,7 +141,7 @@ ${recentRecipes.map((r) => `${r.emoji} ${r.name}`).join('\n')}\n\nTap any recipe
         setMessages((prev) =>
           prev.map((m) =>
             m.id === assistantId
-              ? { ...m, content: "😅 Sorry!\n\nI couldn't find anything related to that.\n\nTry asking by:\n• recipe name\n• ingredient\n• category\n• breakfast\n• lunch\n• dinner\n• dessert\n• beverages", streaming: false, thinking: null }
+              ? { ...m, content: "Hmm... I couldn't process that.\n\nLet's try again 😊", streaming: false, thinking: null }
               : m,
           ),
         );
@@ -149,7 +149,7 @@ ${recentRecipes.map((r) => `${r.emoji} ${r.name}`).join('\n')}\n\nTap any recipe
         setBusy(false);
       }
     },
-    [busy],
+    [busy, favorites, recent, isLoaded],
   );
 
   useEffect(() => {
@@ -195,6 +195,7 @@ ${recentRecipes.map((r) => `${r.emoji} ${r.name}`).join('\n')}\n\nTap any recipe
             exit={{ opacity: 0, y: 40, scale: 0.96 }}
             transition={{ type: 'spring', stiffness: 280, damping: 30 }}
             onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => { if (e.key === 'Escape') onClose(); }}
             className="flex h-[88vh] w-full flex-col overflow-hidden rounded-t-3xl bg-white shadow-card dark:bg-[#1c1c1c] sm:h-[640px] sm:max-w-md sm:rounded-3xl"
           >
             {/* Header */}
@@ -202,9 +203,9 @@ ${recentRecipes.map((r) => `${r.emoji} ${r.name}`).join('\n')}\n\nTap any recipe
               <div className="flex items-center gap-3">
                 <Logo size={40} className="ring-white/30" />
                 <div className="leading-tight">
-                  <div className="font-display text-base font-extrabold">Chef Tara</div>
+                  <div className="font-display text-base font-extrabold">TARA</div>
                   <div className="flex items-center gap-1.5 text-xs text-white/85">
-                    <span className="h-2 w-2 rounded-full bg-green-300" /> Recipe Assistant
+                    <span className="h-2 w-2 rounded-full bg-green-300" /> AI Cooking Companion
                   </div>
                 </div>
               </div>
@@ -283,8 +284,8 @@ ${recentRecipes.map((r) => `${r.emoji} ${r.name}`).join('\n')}\n\nTap any recipe
               ))}
             </div>
 
-            {/* Suggestions */}
-            {messages.length <= 1 && !busy && (
+            {/* Suggestions — always visible when not busy */}
+            {!busy && (
               <motion.div
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -296,7 +297,7 @@ ${recentRecipes.map((r) => `${r.emoji} ${r.name}`).join('\n')}\n\nTap any recipe
                     onClick={() => send(s)}
                     className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/5 px-3 py-1.5 text-xs font-medium text-primary transition hover:bg-primary/10 active:scale-95 dark:text-primary-light dark:border-primary/40"
                   >
-                    <Sparkles size={12} /> {s}
+                    {s}
                   </button>
                 ))}
               </motion.div>
@@ -416,7 +417,7 @@ function FormattedContent({
           );
         }
         // Check for lines like "✅ Tomato Rice (85% match)" or "🟡 Recipe Name"
-        const recipeLineMatch = trimmed.match(/^([✅🟡])\s+(.+?)(?:\s*\((\d+)%\s*match\))?$/);
+        const recipeLineMatch = trimmed.match(/^([✅🟡])\s+(.+?)(?:\s*\((\d+)%\s*match\))?$/u);
         if (recipeLineMatch) {
           const recipeName = recipeLineMatch[2].replace(/^\S+\s/, '').trim();
           const recipe = recipeMap.get(recipeName) || recipeMap.get(recipeLineMatch[2].trim());

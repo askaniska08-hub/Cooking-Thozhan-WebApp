@@ -352,7 +352,7 @@ export const batch1: Recipe[] = [
   {
     id: 'mini-idli',
     name: 'Mini Idli',
-    emoji: '🫓',
+    emoji: '⚪',
     category: 'Breakfast',
     description: 'Bite-sized steamed idlis served with sambar and chutney.',
     must: ['Batter'],
@@ -375,7 +375,7 @@ export const batch1: Recipe[] = [
   {
     id: 'ghee-podi-idli',
     name: 'Ghee Podi Idli',
-    emoji: '🫓',
+    emoji: '🟤',
     category: 'Breakfast',
     description: 'Mini idlis tossed in ghee and roasted lentil podi powder.',
     must: ['Batter', 'Ghee'],

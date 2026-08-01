@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState, Component, type ErrorInfo, type ReactNode } from 'react';
 import { Navbar } from '@/components/Navbar';
 import { Hero } from '@/components/Hero';
 import { IngredientSelector } from '@/components/IngredientSelector';
@@ -15,6 +15,26 @@ import { useFavorites } from '@/context/FavoritesContext';
 import { MessageCircle } from 'lucide-react';
 
 type View = 'home' | 'favorites';
+
+class ErrorBoundary extends Component<
+  { children: ReactNode },
+  { hasError: boolean }
+> {
+  state = { hasError: false };
+  static getDerivedStateFromError() { return { hasError: true }; }
+  componentDidCatch(error: Error, info: ErrorInfo) { console.error('App error:', error, info); }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex min-h-screen flex-col items-center justify-center gap-3 p-8 text-center">
+          <p className="text-lg font-semibold">Something went wrong.</p>
+          <button onClick={() => window.location.reload()} className="btn-primary rounded-full px-5 py-2.5">Reload</button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 export default function App() {
   const { theme, toggle } = useTheme();
@@ -84,6 +104,11 @@ export default function App() {
     setTaraOpen(true);
   }, []);
 
+  const closeTara = useCallback(() => {
+    setTaraOpen(false);
+    setTaraSeed(null);
+  }, []);
+
   const handleTaraRecipeClick = useCallback(
     (recipeId: string) => {
       const recipe = RECIPES.find((r) => r.id === recipeId);
@@ -104,6 +129,7 @@ export default function App() {
   const activeRecipeFavorite = activeRecipe ? isFavorite(activeRecipe.id) : false;
 
   return (
+    <ErrorBoundary>
     <div className="flex min-h-screen flex-col">
       <Navbar
         theme={theme}
@@ -169,22 +195,25 @@ export default function App() {
         onAskTara={() => activeRecipe && askTara(activeRecipe.name)}
       />
 
-      {/* Floating Chef Tara launcher */}
-      <button
-        onClick={() => askTara()}
-        aria-label="Chat with Chef Tara"
-        className="fixed bottom-5 right-5 z-30 grid h-14 w-14 place-items-center rounded-full bg-gradient-to-br from-primary to-accent text-white shadow-glow transition-transform hover:scale-105 active:scale-95"
-      >
-        <MessageCircle size={24} />
-        <span className="absolute -right-0.5 -top-0.5 h-3.5 w-3.5 rounded-full bg-green-400 ring-2 ring-white dark:ring-[#141414]" />
-      </button>
+      {/* Floating TARA launcher */}
+      {!taraOpen && (
+        <button
+          onClick={() => askTara()}
+          aria-label="Chat with TARA"
+          className="fixed bottom-5 right-5 z-30 grid h-14 w-14 place-items-center rounded-full bg-gradient-to-br from-primary to-accent text-white shadow-glow transition-transform hover:scale-105 active:scale-95"
+        >
+          <MessageCircle size={24} />
+          <span className="absolute -right-0.5 -top-0.5 h-3.5 w-3.5 rounded-full bg-green-400 ring-2 ring-white dark:ring-[#141414]" />
+        </button>
+      )}
 
       <TaraChat
         open={taraOpen}
-        onClose={() => setTaraOpen(false)}
+        onClose={closeTara}
         onRecipeClick={handleTaraRecipeClick}
         initialQuestion={taraSeed}
       />
     </div>
+    </ErrorBoundary>
   );
 }

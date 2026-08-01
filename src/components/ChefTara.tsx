@@ -428,12 +428,12 @@ export function ChefTara() {
           {/* Pupil */}
           <motion.circle
             cx="234" cy="153" r="2.5" fill="#1A0E08"
-            animate={{ ry: [2.5, 2.5, 0.3, 2.5, 2.5] }}
+            animate={{ r: [2.5, 2.5, 0.3, 2.5, 2.5] }}
             transition={{ duration: 4.5, repeat: Infinity, times: [0, 0.42, 0.47, 0.52, 1] }}
           />
           <motion.circle
             cx="266" cy="153" r="2.5" fill="#1A0E08"
-            animate={{ ry: [2.5, 2.5, 0.3, 2.5, 2.5] }}
+            animate={{ r: [2.5, 2.5, 0.3, 2.5, 2.5] }}
             transition={{ duration: 4.5, repeat: Infinity, times: [0, 0.42, 0.47, 0.52, 1] }}
           />
           {/* Eye highlights — sparkle */}

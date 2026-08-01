@@ -17,7 +17,6 @@ export function Logo({ size = 40, className = '' }: LogoProps) {
     <span
       className={`logo-container inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full ${className}`}
       style={{ width: size, height: size }}
-      aria-hidden="true"
     >
       <img
         src="/images/tara-logo.png"

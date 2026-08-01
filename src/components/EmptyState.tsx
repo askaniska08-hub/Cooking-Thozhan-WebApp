@@ -45,7 +45,7 @@ export function EmptyState({
         ) : (
           <>
             <RippleButton
-              onClick={() => onAddIngredients?.() ?? onReset()}
+              onClick={() => { if (onAddIngredients) onAddIngredients(); else onReset(); }}
               className="btn-primary px-6 py-3"
             >
               <Plus size={18} /> Add Ingredients

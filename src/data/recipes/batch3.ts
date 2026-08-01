@@ -201,7 +201,7 @@ export const batch3: Recipe[] = [
   {
     id: 'beetroot-poriyal',
     name: 'Beetroot Poriyal',
-    emoji: '🫓',
+    emoji: '🟣',
     category: 'Poriyal & Fries',
     description: 'Earthy grated beetroot tempered with lentils and coconut.',
     must: ['Beetroot', 'Coconut', 'Mustard Seeds', 'Curry Leaves', 'Salt'],
@@ -410,7 +410,7 @@ export const batch3: Recipe[] = [
   {
     id: 'ladies-finger-fry',
     name: "Ladies Finger Fry",
-    emoji: '🥬',
+    emoji: '🥒',
     category: 'Poriyal & Fries',
     description: 'Crisp okra stir-fried with minimal slime and bold spices.',
     must: ['Ladies Finger', 'Cooking Oil', 'Salt', 'Turmeric', 'Red Chilli Powder'],

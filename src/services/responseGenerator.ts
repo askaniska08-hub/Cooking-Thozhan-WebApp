@@ -23,8 +23,8 @@ import { RECIPES } from '@/data/recipes';
 import { INGREDIENTS } from '@/data/ingredients';
 import { searchKnowledge } from '@/data/cookingKnowledge';
 import type { Recipe } from '@/types';
-import { isIngredientAvailable, normalizeIngredient, getMissingIngredients, getMatchedIngredients } from '@/utils';
-import { detectIntent, findRecipeInQuery, type TaraIntent } from './intentDetector';
+import { normalizeIngredient, getMissingIngredients, getMatchedIngredients, extractIngredientsFromText } from '@/utils';
+import { detectIntent, findRecipeInQuery } from './intentDetector';
 import {
   type ConversationContext,
   createContext,
@@ -54,6 +54,35 @@ export interface TaraResponse {
 }
 
 const INGREDIENT_LOWER = new Map(INGREDIENTS.map((i) => [normalizeIngredient(i.name), i.name]));
+
+// ───────────────────────── Ingredient Substitution Suggestions ─────────────────────────
+// Used when a user is 1-2 ingredients short of a recipe.
+const SUBSTITUTION_SUGGESTIONS: Record<string, string> = {
+  'Paneer': 'firm tofu (press it first) works beautifully as a paneer substitute',
+  'Butter': 'a little ghee or even cooking oil will do the trick',
+  'Curd': 'buttermilk thinned with water, or lemon juice mixed with milk',
+  'Coconut': 'desiccated coconut soaked in warm water for 10 minutes',
+  'Tomato': 'tamarind pulp or lemon juice with a pinch of jaggery for tanginess',
+  'Onion': 'shallots or extra ginger with a pinch of asafoetida',
+  'Garlic': 'a pinch of asafoetida (hing) mimics garlic beautifully',
+  'Curry Leaves': 'the dish will still taste wonderful — add extra coriander at the end',
+  'Coriander Leaves': 'the dish will be fine without it, or use mint leaves',
+  'Ghee': 'butter or cooking oil works in a pinch',
+  'Jaggery': 'brown sugar or palm sugar in the same amount',
+  'Rava': 'rice rava or broken wheat (dalia) works well',
+  'Besan': 'rice flour for coating, or cornstarch for thickening',
+  'Cornstarch': 'rice flour or besan in equal amounts',
+  'Milk': 'coconut milk or cashew milk for a dairy-free option',
+  'Egg': '1 tbsp flaxseed + 3 tbsp water (let sit 5 min) for baking, or silken tofu for savoury',
+  'Lemon': 'a splash of vinegar or tamarind water',
+  'Tamarind': 'lemon juice with a pinch of jaggery',
+  'Mustard Seeds': 'cumin seeds work in a pinch for tempering',
+  'Spinach': 'any leafy green — methi or cabbage work too',
+};
+
+function getSubstitutionSuggestion(missingIngredient: string): string | null {
+  return SUBSTITUTION_SUGGESTIONS[missingIngredient] ?? null;
+}
 
 const CATEGORIES = [
   'Rice Dishes', 'Breakfast', 'Bread Recipes', 'Sandwiches',
@@ -87,6 +116,8 @@ export function getRandomTip(): string {
 function normalize(s: string): string {
   return normalizeIngredient(s);
 }
+
+
 
 function levenshtein(a: string, b: string): number {
   const m = a.length;
@@ -122,13 +153,7 @@ function toResult(r: Recipe, extra?: Partial<TaraRecipeResult>): TaraRecipeResul
 }
 
 function extractIngredients(text: string): string[] {
-  const lower = normalize(text);
-  const found: string[] = [];
-  for (const [lowerName, name] of INGREDIENT_LOWER) {
-    const wordBoundary = new RegExp(`\\b${lowerName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
-    if (wordBoundary.test(lower)) found.push(name);
-  }
-  return found;
+  return extractIngredientsFromText(text);
 }
 
 export function findExactRecipe(query: string): Recipe | undefined {
@@ -234,9 +259,9 @@ function formatRecipeList(recipes: Recipe[], header: string, intro?: string): Ta
 
 // ───────────────────────── Greeting responses ─────────────────────────
 const GREETING_VARIANTS = [
-  "👋 Hi! I'm Chef Tara.\n\nTell me what ingredients you have, what you're craving, or ask me anything about cooking!\n\nI'm here to help you cook.",
-  "👋 Hey there! I'm Chef Tara, your recipe buddy.\n\nWhat are we cooking today? Tell me your ingredients or pick a category below.",
-  "👩🏻‍🍳 Hello! Chef Tara here.\n\nGot ingredients? Got cravings? I've got recipes. Let's cook something delicious together!",
+  "👋 Hi! I'm TARA, your AI cooking companion inside Cooking Thozhan 👩‍🍳\n\nTell me what ingredients you have, ask for recipes, cooking tips, or anything food-related.\n\nWhy fear when your THOZHAN is here! 🍛✨",
+  "👋 Hey there! I'm TARA 👩‍🍳\n\nWhat are we cooking today? Tell me your ingredients or pick a quick action below.\n\nWhy fear when your THOZHAN is here! 🍛",
+  "👩‍🍳 Hello! TARA here, your kitchen companion.\n\nGot ingredients? Got cravings? I've got recipes. Let's cook something delicious together!\n\nWhy fear when your THOZHAN is here! ✨",
 ];
 
 // ───────────────────────── Conversation responses ─────────────────────────
@@ -250,8 +275,8 @@ const CONVERSATION_REPLIES: { keys: string[]; response: string }[] = [
   { keys: ['good afternoon', 'afternoon'], response: "Good afternoon! 🌤️\nLunch time? I have plenty of ideas.\nWhat are you in the mood for?" },
   { keys: ['good evening', 'evening'], response: "Good evening! 🌅\nReady to cook something special for dinner?\nTell me what you have!" },
   { keys: ['i love you', 'love you'], response: "Aww, I love helping you too! ❤️\nNow let's make something delicious! 🍳" },
-  { keys: ['who are you', 'what are you', 'your name', 'who is tara', 'about you'], response: "I'm Chef Tara! 👩🏻‍🍳\nYour friendly recipe assistant.\n\nI know all the recipes in the Cooking Thozhan collection and can help you find the perfect dish, answer cooking questions, and suggest what to make with what you have.\n\nNo internet needed — I work entirely offline! 😊" },
-  { keys: ['what can you do', 'help me', 'how do you work', 'what do you do', 'help'], response: "I can help you with:\n\n🔍 Find recipes by name, ingredient, or category\n🍳 Suggest what to cook with your ingredients\n🥣 Answer cooking questions (how to boil eggs, why is my dosa sticking, etc.)\n🍽️ Filter by veg, non-veg, egg, easy, quick, or time\n💡 Share cooking tips and substitutions\n\nJust type naturally — I'll understand! 😊" },
+  { keys: ['who are you', 'what are you', 'your name', 'who is tara', 'about you', 'who are u'], response: "Hi! I'm TARA, your AI cooking companion inside Cooking Thozhan 👩‍🍳\n\nMy job is to help you discover delicious recipes using the ingredients already available in your kitchen.\n\nWhy fear when your THOZHAN is here! 🍛✨" },
+  { keys: ['what can you do', 'help me', 'how do you work', 'what do you do', 'help'], response: "I can help you with:\n\n🔍 Find recipes by name, ingredient, or category\n🍳 Suggest what to cook with your ingredients\n🥣 Answer cooking questions (how to boil eggs, why is my dosa sticking, etc.)\n🍽️ Filter by veg, non-veg, egg, easy, quick, or time\n💡 Share cooking tips and substitutions\n\nJust type naturally — I'll understand! 😊\n\nWhy fear when your THOZHAN is here! 🍛" },
   { keys: ["you're funny", 'you are funny', 'tell me a joke', 'joke'], response: "Why did the tomato turn red? 🍅\n\nBecause it saw the salad dressing! 😄\n\nNow, what are we cooking today?" },
   { keys: ['nice', 'cool', 'awesome', 'great', 'wow', 'super', 'lovely', 'perfect', 'amazing'], response: "Glad you think so! 😊\nWhat else can I help you with?" },
   { keys: ['i am bored', "i'm bored", 'im bored', 'bored'], response: "Bored? Let's fix that with some cooking! 🍳\n\nHow about trying a new recipe?\n\n• Ask me for a recommendation\n• Tell me what ingredients you have\n• Or pick a category like Desserts or Breakfast!\n\nCooking is the best cure for boredom. 😊" },
@@ -305,12 +330,12 @@ export function processQuery(
       }
 
       case 'favourites': {
-        response = handleFavourites(context);
+        response = handleFavourites();
         break;
       }
 
       case 'recent': {
-        response = handleRecent(context);
+        response = handleRecent();
         break;
       }
 
@@ -346,7 +371,7 @@ export function processQuery(
       }
 
       case 'recipe_recommendation': {
-        response = handleRecommendation(query, context);
+        response = handleRecommendation(query);
         break;
       }
 
@@ -409,15 +434,22 @@ export function processQuery(
 
       case 'cooking_tip': {
         const answer = searchKnowledge(query);
-        response = answer ? { text: answer } : { text: "👩🏻‍🍳 Here's a tip: always taste as you cook and adjust seasoning gradually. The secret ingredient is always love — and a little extra ghee! 😊" };
+        response = answer ? { text: answer } : { text: "👩‍🍳 Here's a tip: always taste as you cook and adjust seasoning gradually. The secret ingredient is always love — and a little extra ghee! 😊" };
         break;
       }
 
-      default:
-        response = fallbackResponse();
+      default: {
+        // Check for impossible requests (e.g. "make pizza with only water")
+        const impossible = detectImpossibleRequest(query);
+        if (impossible) {
+          response = impossible;
+        } else {
+          response = fallbackResponse();
+        }
+      }
     }
 
-    return { response, newContext: updateContext(newContext, {}) };
+    return { response, newContext: newContext === context ? updateContext(newContext, {}) : newContext };
   } catch {
     return { response: fallbackResponse(), newContext };
   }
@@ -452,36 +484,46 @@ function handleRecipeInfo(query: string, context: ConversationContext): TaraResp
  */
 function formatRecipeCard(recipe: Recipe, context: ConversationContext): TaraResponse {
   const mentioned = context.mentionedIngredients.length > 0 ? context.mentionedIngredients : extractIngredients(recipe.name);
-  const matched = recipe.ingredients.filter((i) => isIngredientAvailable(i, mentioned));
-  const missing = recipe.ingredients.filter((i) => !isIngredientAvailable(i, mentioned));
-  const matchPercent = mentioned.length > 0 ? Math.round((matched.length / recipe.ingredients.length) * 100) : 0;
+  const matched = getMatchedIngredients(recipe.ingredients, mentioned);
+  const missing = getMissingIngredients(recipe.ingredients, mentioned);
+  const matchPercent = mentioned.length > 0 ? Math.round((matched.length / (matched.length + missing.length || 1)) * 100) : 0;
 
   const matchLine = mentioned.length > 0
-    ? `\n\n**Match:** ${matchPercent}% — You have ${matched.length} of ${recipe.ingredients.length} ingredients`
+    ? `\n\n**Match:** ${matchPercent}% — You have ${matched.length} of ${matched.length + missing.length} ingredients`
     : '';
 
   const matchedText = matched.length > 0
-    ? `\n\n**You have:** ${matched.join(', ')}`
+    ? `\n\n✅ **Available:** ${matched.join(', ')}`
     : '';
 
-  const missingText = missing.length > 0
-    ? `\n\n**Still need:** ${missing.join(', ')}`
-    : '';
+  let missingText = '';
+  if (missing.length > 0) {
+    missingText = `\n\n❌ **Missing:** ${missing.join(', ')}`;
+    // Add substitution suggestions for missing ingredients
+    const subs = missing
+      .map((m) => {
+        const sub = getSubstitutionSuggestion(m);
+        return sub ? `• No ${m}? ${sub}.` : null;
+      })
+      .filter((s): s is string => s !== null);
+    if (subs.length > 0) {
+      missingText += `\n\n💡 **Substitutions:**\n${subs.join('\n')}`;
+    }
+  }
 
   const similar = findSimilarRecipes(recipe);
   const similarText = similar.length > 0
-    ? `\n\n---\n\n👩🏻‍🍳 **You may also enjoy:**\n${similar.map((r) => `${r.emoji} ${r.name}`).join('\n')}`
+    ? `\n\n---\n\n👩‍🍳 **You may also enjoy:**\n${similar.map((r) => `${r.emoji} ${r.name}`).join('\n')}`
     : '';
 
   return {
     text:
-      `👩🏻‍🍳 **${recipe.name}** is a fantastic choice!\n\n` +
-      `${recipe.description}\n\n` +
-      `⏱ ${recipe.time} min | 👥 ${recipe.servings} | ${recipe.difficulty} | ${recipe.veg ? '🟢 Veg' : '🔴 Non-Veg'}` +
+      `🍛 **${recipe.name}**\n\n` +
+      `⏱ ${recipe.time} mins | 🥣 Serves ${recipe.servings} | 🔥 ${recipe.difficulty} | ${recipe.veg ? '🟢 Veg' : '🔴 Non-Veg'}` +
       matchLine + matchedText + missingText +
-      `\n\n**Ingredients:**\n${recipe.ingredients.map((i) => `• ${i}`).join('\n')}` +
-      `\n\n**Steps:**\n${recipe.steps.map((s, i) => `${i + 1}. ${s}`).join('\n')}` +
-      (recipe.tip ? `\n\n💡 **Tip:** ${recipe.tip}` : '') +
+      `\n\n**Ingredients**\n${recipe.ingredients.map((i) => `• ${i}`).join('\n')}` +
+      `\n\n**Cooking Steps**\n${recipe.steps.map((s, i) => `${i + 1}. ${s}`).join('\n')}` +
+      (recipe.tip ? `\n\n💡 **Pro Tip:** ${recipe.tip}` : '') +
       similarText,
     recipes: [toResult(recipe, { matchPercent, matched, missing }), ...similar.map((r) => toResult(r))],
   };
@@ -496,18 +538,29 @@ function handleMissingIngredients(query: string, context: ConversationContext): 
 
   const recipe = found.recipe;
   const mentioned = context.mentionedIngredients.length > 0 ? context.mentionedIngredients : extractIngredients(query);
-  const matched = recipe.ingredients.filter((i) => isIngredientAvailable(i, mentioned));
-  const missing = recipe.ingredients.filter((i) => !isIngredientAvailable(i, mentioned));
+  const matched = getMatchedIngredients(recipe.ingredients, mentioned);
+  const missing = getMissingIngredients(recipe.ingredients, mentioned);
 
   if (missing.length === 0) {
     return {
-      text: `🎉 Great news! You have everything you need for **${recipe.name}**.\n\nNo missing ingredients — you're ready to cook!`,
+      text: `🎉 Great news! You have everything you need for **${recipe.name}**.
+
+No missing ingredients — you're ready to cook!`,
       recipes: [toResult(recipe)],
     };
   }
 
+  // Add substitution suggestions for missing ingredients
+  const subs = missing
+    .map((m) => {
+      const sub = getSubstitutionSuggestion(m);
+      return sub ? `• No ${m}? ${sub}.` : null;
+    })
+    .filter((s): s is string => s !== null);
+  const subText = subs.length > 0 ? `\n\n💡 **Substitutions:**\n${subs.join('\n')}` : '';
+
   return {
-    text: `🛒 For **${recipe.name}**, you're still missing:\n\n${missing.map((m) => `• ${m}`).join('\n')}\n\nYou already have: ${matched.join(', ') || 'none mentioned yet'}.\n\nWant me to add these to a shopping list? Just say "add to shopping list"!`,
+    text: `🛒 For **${recipe.name}**, you're still missing:\n\n${missing.map((m) => `• ${m}`).join('\n')}\n\nYou already have: ${matched.join(', ') || 'none mentioned yet'}.${subText}\n\nWant me to add these to a shopping list? Just say "add to shopping list"!`,
     recipes: [toResult(recipe, { missing })],
   };
 }
@@ -515,7 +568,7 @@ function handleMissingIngredients(query: string, context: ConversationContext): 
 /**
  * Handle favourites query.
  */
-function handleFavourites(context: ConversationContext): TaraResponse {
+function handleFavourites(): TaraResponse {
   // This is handled client-side in TaraChat via the favorites context.
   // Return a prompt that the chat component can intercept.
   return {
@@ -526,7 +579,7 @@ function handleFavourites(context: ConversationContext): TaraResponse {
 /**
  * Handle recently viewed query.
  */
-function handleRecent(context: ConversationContext): TaraResponse {
+function handleRecent(): TaraResponse {
   return {
     text: `🕘 Let me pull up your recently viewed recipes!`,
   };
@@ -543,7 +596,11 @@ function handleShoppingList(context: ConversationContext): TaraResponse {
   if (!recipe) return fallbackResponse();
 
   const mentioned = context.mentionedIngredients;
-  const missing = recipe.ingredients.filter((i) => !isIngredientAvailable(i, mentioned));
+  const missing = getMissingIngredients(recipe.ingredients, mentioned);
+
+  if (missing.length === 0) {
+    return { text: `🎉 You already have everything you need for **${recipe.name}** — no shopping required! 🛍️` };
+  }
 
   return {
     text: `🛒 **Shopping List for ${recipe.name}:**\n\n${missing.map((m) => `☐ ${m}`).join('\n')}\n\nTake this to the store and you'll be ready to cook! 🛍️`,
@@ -610,7 +667,7 @@ function handleFollowUp(query: string, context: ConversationContext): TaraRespon
   };
 }
 
-function handleRecommendation(query: string, context: ConversationContext): TaraResponse {
+function handleRecommendation(query: string): TaraResponse {
   const lower = normalize(query);
 
   if (lower.includes('sick') || lower.includes('ill') || lower.includes('cold') || lower.includes('fever')) {
@@ -873,9 +930,28 @@ function handleClarifyingQuestion(query: string, context: ConversationContext): 
 function fallbackResponse(): TaraResponse {
   const fuzzy = findFuzzyRecipes('tomato rice');
   return {
-    text: `😅 I couldn't find an exact match, but here are some popular recipes you might enjoy.\n\n${(fuzzy.length > 0 ? fuzzy : RECIPES.slice(0, 4)).map((r) => `${r.emoji} ${r.name}`).join('\n')}\n\nTry asking by:\n• recipe name\n• ingredient\n• category\n• breakfast\n• lunch\n• dinner\n• dessert\n• beverages`,
+    text: `Hmm... I couldn't find an exact match for that 😊\n\nHere are some popular recipes you might enjoy:\n\n${(fuzzy.length > 0 ? fuzzy : RECIPES.slice(0, 4)).map((r) => `${r.emoji} ${r.name}`).join('\n')}\n\nTry asking by:\n• recipe name\n• ingredient\n• category\n• breakfast / lunch / dinner\n• dessert / beverages`,
     recipes: (fuzzy.length > 0 ? fuzzy : RECIPES.slice(0, 4)).map((r) => toResult(r)),
   };
+}
+
+function detectImpossibleRequest(query: string): TaraResponse | null {
+  const lower = normalizeIngredient(query);
+  const impossiblePatterns = [
+    /make .+ with only water/,
+    /cook .+ with (just )?water/,
+    /pizza with (only )?water/,
+    /cake with (only )?water/,
+    /biryani with (only )?water/,
+    /make .+ with nothing/,
+    /cook .+ with (just )?salt/,
+  ];
+  if (impossiblePatterns.some((p) => p.test(lower))) {
+    return {
+      text: "I don't think that's possible with just that 😊\n\nBut if you have a few more ingredients, I can help you make something delicious!\n\nTell me what ingredients you have and I'll find recipes you can cook right now.\n\nWhy fear when your THOZHAN is here! 🍛",
+    };
+  }
+  return null;
 }
 
 function getCategoryEmoji(cat: string): string {
@@ -898,9 +974,9 @@ function getMealEmoji(meal: string): string {
 // ───────────────────────── Suggestion chips ─────────────────────────
 
 export const TARA_SUGGESTION_SETS = [
-  ['🍚 Rice Dishes', '🥣 Breakfast', '🍲 Soups', '🍛 Curries', '🍰 Desserts', '🥤 Drinks', '🥜 Peanut Recipes', '🥗 Healthy', '⚡ Under 20 Minutes'],
-  ['🥞 Breakfast', '🌶️ Spicy', '🥚 Egg Recipes', '🥬 Vegetarian', '🍰 Desserts', '🍚 Rice Dishes', '🥤 Beverages', '🥛 Soups', '⚡ Quick Recipes'],
-  ['🍛 Lunch', '🌙 Dinner', '🍿 Snacks', '🥗 Healthy', '🍰 Desserts', '🥚 Egg Recipes', '🌶️ Spicy', '🍚 Rice Dishes', '🥜 Peanut Recipes'],
+  ['🥘 Suggest Recipes', '🥬 What can I cook?', '🛒 Shopping Help', '🍳 Quick Breakfast', '🍛 Dinner Ideas', '🥣 Healthy Recipes', '🎲 Surprise Me', '💡 Cooking Tips'],
+  ['🥘 Suggest Recipes', '🥬 What can I cook?', '🍳 Quick Breakfast', '🍛 Dinner Ideas', '🥣 Healthy Recipes', '🎲 Surprise Me', '💡 Cooking Tips', '🛒 Shopping Help'],
+  ['🥘 Suggest Recipes', '🥬 What can I cook?', '🍛 Dinner Ideas', '🥣 Healthy Recipes', '🎲 Surprise Me', '💡 Cooking Tips', '🛒 Shopping Help', '🍳 Quick Breakfast'],
 ];
 
 export function getSuggestionSet(): string[] {

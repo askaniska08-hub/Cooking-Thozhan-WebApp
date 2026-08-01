@@ -1,4 +1,4 @@
-import { INGREDIENTS, PANTRY_STAPLES, PANTRY_OPTIONAL } from '@/data/ingredients';
+import { INGREDIENTS, PANTRY_STAPLES, PANTRY_OPTIONAL, INGREDIENT_ALIASES } from '@/data/ingredients';
 
 /**
  * Normalize an ingredient name for reliable comparison.
@@ -24,6 +24,53 @@ const PANTRY_ALL = new Set<string>([
   ...[...PANTRY_OPTIONAL].map(normalizeIngredient),
 ]);
 
+// Normalized alias map for O(1) lookup
+const ALIAS_MAP = new Map<string, string>();
+for (const [alias, canonical] of Object.entries(INGREDIENT_ALIASES)) {
+  ALIAS_MAP.set(normalizeIngredient(alias), canonical);
+}
+
+/**
+ * Resolve a raw ingredient string (alias, plural, misspelling) to its
+ * canonical display name from the master INGREDIENTS list.
+ * Returns the original string if no alias is found.
+ */
+export function resolveIngredient(raw: string): string {
+  const norm = normalizeIngredient(raw);
+  return ALIAS_MAP.get(norm) ?? raw;
+}
+
+/**
+ * Escape a string for safe use inside a RegExp.
+ */
+function escapeRegex(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * Extract all known ingredients mentioned in a free-text string.
+ * Handles aliases, plurals, common misspellings, and case variations.
+ * Returns canonical display names (e.g. "Capsicum" for "bell pepper").
+ */
+export function extractIngredientsFromText(text: string): string[] {
+  const norm = normalizeIngredient(text);
+  const found = new Set<string>();
+  for (const [lowerName, canonicalName] of ALIAS_MAP) {
+    const re = new RegExp(`\\b${escapeRegex(lowerName)}\\b`, 'i');
+    if (re.test(norm)) {
+      found.add(canonicalName);
+    }
+  }
+  for (const ing of INGREDIENTS) {
+    const ln = normalizeIngredient(ing.name);
+    const re = new RegExp(`\\b${escapeRegex(ln)}\\b`, 'i');
+    if (re.test(norm)) {
+      found.add(ing.name);
+    }
+  }
+  return [...found];
+}
+
 /**
  * Check whether a recipe ingredient is available to the user.
  *
@@ -32,9 +79,6 @@ const PANTRY_ALL = new Set<string>([
  *   2. It is a pantry staple (Salt, Cooking Oil, etc.) that is assumed to be on hand.
  *
  * This is the SINGLE source of truth for ingredient availability.
- * Every component — Recipe Cards, Recipe Modal, Tara AI, Shopping List,
- * Match Percentage, Missing Ingredients — must call this function.
- * No component should perform its own ingredient comparison.
  */
 export function isIngredientAvailable(ingredient: string, selected: string[]): boolean {
   const norm = normalizeIngredient(ingredient);
@@ -68,8 +112,7 @@ export function getMatchedIngredients(recipeIngredients: string[], selected: str
 
 /**
  * Returns the display names of ingredients the user does NOT have.
- * Pantry staples are excluded — they are assumed on hand and should
- * never appear in a shopping list or missing-ingredients list.
+ * Pantry staples are excluded — they are assumed on hand.
  * De-duplicated, preserves recipe order.
  */
 export function getMissingIngredients(recipeIngredients: string[], selected: string[]): string[] {

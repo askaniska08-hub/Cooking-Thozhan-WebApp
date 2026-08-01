@@ -7,8 +7,8 @@
  */
 
 import { RECIPES } from '@/data/recipes';
-import { INGREDIENTS } from '@/data/ingredients';
 import { searchKnowledge } from '@/data/cookingKnowledge';
+import { normalizeIngredient, extractIngredientsFromText } from '@/utils';
 import type { ConversationContext } from './conversationMemory';
 
 export type TaraIntent =
@@ -108,25 +108,13 @@ const EASY_KEYWORDS = ['easy', 'simple', 'beginner'];
 const MEDIUM_KEYWORDS = ['medium', 'moderate'];
 const HARD_KEYWORDS = ['hard', 'difficult', 'advanced', 'complex'];
 
-const INGREDIENT_NAMES = INGREDIENTS.map((i) => i.name);
-const INGREDIENT_LOWER = new Map(INGREDIENT_NAMES.map((n) => [n.toLowerCase(), n]));
-
-function normalize(s: string): string {
-  return s.toLowerCase().trim().replace(/\s+/g, ' ');
-}
 
 function hasAny(text: string, keywords: string[]): boolean {
   return keywords.some((k) => text.includes(k));
 }
 
 function extractIngredients(text: string): string[] {
-  const lower = normalize(text);
-  const found: string[] = [];
-  for (const [lowerName, name] of INGREDIENT_LOWER) {
-    const wordBoundary = new RegExp(`\\b${lowerName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
-    if (wordBoundary.test(lower)) found.push(name);
-  }
-  return found;
+  return extractIngredientsFromText(text);
 }
 
 function levenshtein(a: string, b: string): number {
@@ -147,7 +135,7 @@ function levenshtein(a: string, b: string): number {
 }
 
 function isGreeting(text: string): boolean {
-  const lower = normalize(text);
+  const lower = normalizeIngredient(text);
   return GREETINGS.some((g) => lower === g || lower.startsWith(g + ' ') || lower.startsWith(g + '!') || lower.startsWith(g + ','));
 }
 
@@ -158,7 +146,7 @@ function isGreeting(text: string): boolean {
  * Returns the matched Recipe or undefined.
  */
 export function findRecipeInQuery(query: string): { recipe: typeof RECIPES[number]; strippedQuery: string } | undefined {
-  const lower = normalize(query);
+  const lower = normalizeIngredient(query);
 
   // Strip filler phrases to isolate the recipe name
   let stripped = lower;
@@ -173,26 +161,26 @@ export function findRecipeInQuery(query: string): { recipe: typeof RECIPES[numbe
   if (!stripped) return undefined;
 
   // Exact match
-  let match = RECIPES.find((r) => normalize(r.name) === stripped);
+  let match = RECIPES.find((r) => normalizeIngredient(r.name) === stripped);
   if (match) return { recipe: match, strippedQuery: stripped };
 
   // Recipe name contained in stripped query
   match = RECIPES.find((r) => {
-    const rn = normalize(r.name);
+    const rn = normalizeIngredient(r.name);
     return stripped.includes(rn);
   });
   if (match) return { recipe: match, strippedQuery: stripped };
 
   // Stripped query contained in recipe name
   match = RECIPES.find((r) => {
-    const rn = normalize(r.name);
+    const rn = normalizeIngredient(r.name);
     return rn.includes(stripped) && stripped.length >= 4;
   });
   if (match) return { recipe: match, strippedQuery: stripped };
 
   // Fuzzy word-overlap match (at least 50% of recipe name words present)
   for (const r of RECIPES) {
-    const rn = normalize(r.name);
+    const rn = normalizeIngredient(r.name);
     const rWords = rn.split(' ').filter((w) => w.length >= 3);
     if (rWords.length === 0) continue;
     let matched = 0;
@@ -215,7 +203,7 @@ export function findRecipeInQuery(query: string): { recipe: typeof RECIPES[numbe
  * True if it contains a recipe-info phrase OR if a recipe name is found in the query.
  */
 function isRecipeInfoQuery(query: string): boolean {
-  const lower = normalize(query);
+  const lower = normalizeIngredient(query);
   const hasPhrase = RECIPE_INFO_PHRASES.some((p) => lower.startsWith(p + ' ') || lower.includes(' ' + p + ' '));
   if (hasPhrase) return true;
   // Even without a phrase, if a recipe name is clearly present, treat as recipe info
@@ -240,7 +228,7 @@ function isRecipeInfoQuery(query: string): boolean {
  *  12. Fallback
  */
 export function detectIntent(query: string, context: ConversationContext): TaraIntent {
-  const lower = normalize(query);
+  const lower = normalizeIngredient(query);
 
   // 1. Greeting
   if (isGreeting(query)) return 'greeting';

@@ -40,6 +40,14 @@ export function RecipeModal({ recipe, selectedIngredients, isFavorite, onClose, 
     navigator.clipboard?.writeText(shoppingText).then(() => {
       setCopied(true);
       window.setTimeout(() => setCopied(false), 2000);
+    }).catch(() => {
+      // Fallback for browsers without clipboard API
+      const ta = document.createElement('textarea');
+      ta.value = shoppingText;
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); setCopied(true); window.setTimeout(() => setCopied(false), 2000); } catch { /* ignore */ }
+      ta.remove();
     });
   };
 

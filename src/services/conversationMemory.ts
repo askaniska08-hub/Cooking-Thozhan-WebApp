@@ -41,12 +41,3 @@ export function updateContext(
   return { ...context, ...update, messageCount: context.messageCount + 1 };
 }
 
-/**
- * Check if the user's message contains a pronoun referring to the last recipe.
- * Examples: "it", "that", "this", "the same".
- */
-export function refersToLastRecipe(query: string): boolean {
-  const lower = query.toLowerCase().trim();
-  const pronouns = ['it', 'that', 'this', 'the same', 'the recipe', 'the dish'];
-  return pronouns.some((p) => lower === p || lower.includes(` ${p} `) || lower.startsWith(`${p} `) || lower.endsWith(` ${p}`));
-}

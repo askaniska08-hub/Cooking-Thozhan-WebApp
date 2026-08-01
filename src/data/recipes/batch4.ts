@@ -502,7 +502,7 @@ export const batch4: Recipe[] = [
   {
     id: 'coconut-burfi',
     name: 'Coconut Burfi',
-    emoji: '🤍',
+    emoji: '🍬',
     category: 'Desserts',
     description: 'Chewy coconut burfi set with jaggery and a touch of ghee.',
     must: ['Coconut', 'Jaggery', 'Ghee'],
@@ -824,7 +824,7 @@ export const batch4: Recipe[] = [
   {
     id: 'badam-milk',
     name: 'Badam Milk',
-    emoji: '🥜',
+    emoji: '🥛',
     category: 'Beverages',
     description: 'Rich saffron-style badam milk made with soaked almonds and saffron.',
     must: ['Milk', 'Almonds', 'White Sugar'],

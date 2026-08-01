@@ -100,9 +100,9 @@ export function Hero({ onStart, onAskTara }: HeroProps) {
             transition={{ duration: 0.5, delay: 0.62 }}
             className="mt-8 flex flex-col items-center gap-3 sm:flex-row lg:justify-start"
           >
-            <RippleButton onClick={onStart} className="btn-primary px-7 py-3.5 text-base">
+            <RippleButton onClick={onStart} className="btn-primary group/btn px-7 py-3.5 text-base">
               <ChefHat size={20} /> Start Cooking
-              <ArrowRight size={18} className="transition-transform group-hover:translate-x-1" />
+              <ArrowRight size={18} className="transition-transform group-hover/btn:translate-x-1" />
             </RippleButton>
             <RippleButton onClick={onAskTara} className="btn-ghost border border-primary/30 px-6 py-3.5 text-base hover:bg-primary/10">
               <MessageCircle size={20} /> Ask Chef Tara

@@ -15,8 +15,8 @@ export function MatchRing({ percent, size = 52, className }: MatchRingProps) {
   const color = percent === 100 ? '#34C759' : percent >= 70 ? '#FF7A00' : '#FFB020';
 
   return (
-    <div className={cn('relative inline-flex items-center justify-center', className)} style={{ width: size, height: size }}>
-      <svg width={size} height={size} className="-rotate-90">
+    <div className={cn('relative inline-flex items-center justify-center', className)} style={{ width: size, height: size }} role="img" aria-label={`${percent}% ingredient match`}>
+      <svg width={size} height={size} className="-rotate-90" aria-hidden="true">
         <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="currentColor" strokeWidth={stroke} className="text-gray-200 dark:text-gray-700" />
         <motion.circle
           cx={size / 2}

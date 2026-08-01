@@ -1,11 +1,7 @@
 import { useRef } from 'react';
 import { useRipple } from '@/hooks/useRipple';
 
-interface RippleButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  as?: 'button';
-}
-
-export function RippleButton({ className = '', children, onClick, ...rest }: RippleButtonProps) {
+export function RippleButton({ className = '', children, onClick, ...rest }: React.ButtonHTMLAttributes<HTMLButtonElement>) {
   const ref = useRef<HTMLButtonElement>(null);
   const ripple = useRipple(ref);
 

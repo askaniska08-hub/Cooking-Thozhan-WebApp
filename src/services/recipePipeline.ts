@@ -126,13 +126,13 @@ export function buildRecipeContext(ranking: RecipeRanking, ingredients: string[]
 
 /** Quick lookup for a single recipe by name (used for "tell me about X"). */
 export function findRecipeByName(query: string): Recipe | undefined {
-  const q = query.toLowerCase();
+  const q = normalizeIngredient(query);
   return RECIPES.find(
     (r) =>
-      r.name.toLowerCase() === q ||
-      r.name.toLowerCase().includes(q) ||
-      q.includes(r.name.toLowerCase()),
+      normalizeIngredient(r.name) === q ||
+      normalizeIngredient(r.name).includes(q) ||
+      q.includes(normalizeIngredient(r.name)),
   );
 }
 
-export { PANTRY_STAPLES, RECIPES };
+export { PANTRY_STAPLES };

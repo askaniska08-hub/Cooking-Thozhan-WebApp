@@ -13,6 +13,6 @@ export function useRipple<T extends HTMLElement>(ref: RefObject<T>) {
     wave.style.top = `${e.clientY - rect.top - size / 2}px`;
     el.classList.add('ripple');
     el.appendChild(wave);
-    window.setTimeout(() => wave.remove(), 650);
+    window.setTimeout(() => { wave.remove(); el.classList.remove('ripple'); }, 650);
   };
 }

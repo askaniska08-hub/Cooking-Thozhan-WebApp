@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Heart, ArrowLeft, ChefHat } from 'lucide-react';
+import { Heart, ArrowLeft } from 'lucide-react';
 import type { Recipe, RecipeWithMatch } from '@/types';
 import { RecipeCard } from './RecipeCard';
 import { EmptyState } from './EmptyState';
@@ -114,6 +114,3 @@ export function FavoritesView({
     </section>
   );
 }
-
-// Re-export for convenience
-export { ChefHat };

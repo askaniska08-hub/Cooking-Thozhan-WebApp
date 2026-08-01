@@ -4,6 +4,7 @@ import { batch2 } from '@/data/recipes/batch2';
 import { batch3 } from '@/data/recipes/batch3';
 import { batch4 } from '@/data/recipes/batch4';
 import { batch5 } from '@/data/recipes/batch5';
+import { batch6 } from '@/data/recipes/batch6';
 
 /**
  * Cooking Thozhan recipe database.
@@ -946,4 +947,5 @@ export const RECIPES: Recipe[] = [
   ...batch3,
   ...batch4,
   ...batch5,
+  ...batch6,
 ];

@@ -82,6 +82,9 @@ export const INGREDIENTS: Ingredient[] = [
   { name: 'Noodles', emoji: '🍜', category: 'Essentials & Staples' },
   { name: 'Batter', emoji: '⚪', category: 'Essentials & Staples' },
   { name: 'Rice Flour', emoji: '🍚', category: 'Essentials & Staples' },
+  { name: 'Baking Powder', emoji: '🧁', category: 'Essentials & Staples' },
+  { name: 'Sesame Oil', emoji: '🫒', category: 'Essentials & Staples' },
+  { name: 'Vinegar', emoji: '🍶', category: 'Essentials & Staples' },
 
   // 🫘 Dal Varieties
   { name: 'Toor Dal (Thuvaram Paruppu)', emoji: '🟡', category: 'Dal Varieties' },

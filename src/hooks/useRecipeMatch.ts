@@ -1,31 +1,35 @@
 import type { Recipe, RecipeWithMatch } from '@/types';
-import { isIngredientAvailable, normalizeIngredient, getMatchedIngredients, getMissingIngredients } from '@/utils';
+import { getIngredientStatus, normalizeIngredient } from '@/utils';
+
+/** Minimum match percentage for a recipe to be shown anywhere. */
+export const MIN_MATCH_THRESHOLD = 45;
 
 function computeStars(match: number): number {
   if (match >= 100) return 5;
-  if (match >= 80) return 4;
-  if (match >= 60) return 3;
+  if (match >= 70) return 4;
+  if (match >= 45) return 3;
   return 2;
 }
 
 export function computeMatch(recipe: Recipe, selected: string[]): RecipeWithMatch | null {
+  const status = getIngredientStatus(recipe.ingredients, selected);
+
   // All "must" ingredients must be available (selected or pantry)
-  const mustOk = recipe.must.every((m) => isIngredientAvailable(m, selected));
+  const mustOk = recipe.must.every((m) => {
+    const norm = normalizeIngredient(m);
+    return status.availableIngredients.some((a) => normalizeIngredient(a) === norm);
+  });
   if (!mustOk) return null;
 
-  const matched = getMatchedIngredients(recipe.ingredients, selected);
-  const missing = getMissingIngredients(recipe.ingredients, selected);
-  const total = matched.length + missing.length;
-
-  // Match percent uses de-duplicated counts (no double-counting duplicates)
-  const matchPercent = Math.min(100, Math.max(0, Math.round((matched.length / (total || 1)) * 100)));
+  // Below threshold — treat as non-existent
+  if (status.matchPercentage < MIN_MATCH_THRESHOLD) return null;
 
   return {
     ...recipe,
-    matchPercent,
-    matched,
-    missing,
-    stars: computeStars(matchPercent),
+    matchPercent: status.matchPercentage,
+    matched: status.availableIngredients,
+    missing: status.missingIngredients,
+    stars: computeStars(status.matchPercentage),
   };
 }
 
@@ -37,9 +41,6 @@ export interface MatchBuckets {
 }
 
 export function bucketMatches(recipes: Recipe[], selected: string[]): MatchBuckets {
-  // Any recipe whose must ingredients are all available should appear,
-  // regardless of overall match percentage. The must-ingredient check in
-  // computeMatch is the gatekeeper — the percentage only controls ranking.
   const withMatches = recipes
     .map((r) => computeMatch(r, selected))
     .filter((r): r is RecipeWithMatch => r !== null)
@@ -51,8 +52,8 @@ export function bucketMatches(recipes: Recipe[], selected: string[]): MatchBucke
 
   return {
     perfect: withMatches.filter((r) => r.matchPercent === 100),
-    great: withMatches.filter((r) => r.matchPercent >= 80 && r.matchPercent < 100),
-    tryAlso: withMatches.filter((r) => r.matchPercent < 80),
+    great: withMatches.filter((r) => r.matchPercent >= 70 && r.matchPercent < 100),
+    tryAlso: withMatches.filter((r) => r.matchPercent >= 45 && r.matchPercent < 70),
     total: withMatches.length,
   };
 }

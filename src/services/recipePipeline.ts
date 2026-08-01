@@ -1,7 +1,7 @@
 import { RECIPES } from '@/data/recipes';
-import { PANTRY_STAPLES } from '@/data/ingredients';
-import { computeMatch } from '@/hooks/useRecipeMatch';
+import { computeMatch, MIN_MATCH_THRESHOLD } from '@/hooks/useRecipeMatch';
 import type { Recipe, RecipeWithMatch } from '@/types';
+import { normalizeIngredient } from '@/utils';
 
 /**
  * Chef Tara recipe pipeline.
@@ -31,8 +31,8 @@ export interface RecipeRanking {
 
 function levelFor(matchPercent: number): MatchLevel {
   if (matchPercent >= 100) return 'perfect';
-  if (matchPercent >= 80) return 'great';
-  if (matchPercent >= 60) return 'good';
+  if (matchPercent >= 70) return 'great';
+  if (matchPercent >= 45) return 'good';
   return 'almost';
 }
 
@@ -40,7 +40,7 @@ function levelLabel(level: MatchLevel): string {
   switch (level) {
     case 'perfect': return 'Perfect Match';
     case 'great': return 'Great Match';
-    case 'good': return 'Good Match';
+    case 'good': return 'You Can Also Try';
     case 'almost': return 'Almost There';
   }
 }
@@ -60,7 +60,8 @@ export function rankRecipes(ingredients: string[]): RecipeRanking {
 
   for (const recipe of RECIPES) {
     const match = computeMatch(recipe, ingredients);
-    if (!match) continue;
+    if (!match) continue;  // null = below 45% threshold or must-ingredients not met
+    if (match.matchPercent < MIN_MATCH_THRESHOLD) continue;
     const level = levelFor(match.matchPercent);
     ranked.push({
       ...match,
@@ -134,5 +135,3 @@ export function findRecipeByName(query: string): Recipe | undefined {
       q.includes(normalizeIngredient(r.name)),
   );
 }
-
-export { PANTRY_STAPLES };

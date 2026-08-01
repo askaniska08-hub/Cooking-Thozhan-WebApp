@@ -4,25 +4,29 @@ import type { Recipe, RecipeWithMatch } from '@/types';
 import { RecipeCard } from './RecipeCard';
 import { EmptyState } from './EmptyState';
 import { RippleButton } from './ui/RippleButton';
+import { getIngredientStatus } from '@/utils';
 
 interface FavoritesViewProps {
   recipes: Recipe[];
   favorites: string[];
   recent: string[];
   isLoaded: boolean;
+  selected: string[];
   onToggleFavorite: (id: string) => void;
   onView: (recipe: RecipeWithMatch) => void;
   onBack: () => void;
   onAskTara: (recipeName: string) => void;
 }
 
-function toWithMatch(r: Recipe): RecipeWithMatch {
+function toWithMatch(r: Recipe, selected: string[]): RecipeWithMatch {
+  const status = getIngredientStatus(r.ingredients, selected);
+  const stars = status.matchPercentage >= 100 ? 5 : status.matchPercentage >= 70 ? 4 : status.matchPercentage >= 45 ? 3 : 2;
   return {
     ...r,
-    matchPercent: 100,
-    matched: r.ingredients,
-    missing: [],
-    stars: 5,
+    matchPercent: status.matchPercentage,
+    matched: status.availableIngredients,
+    missing: status.missingIngredients,
+    stars,
   };
 }
 
@@ -31,6 +35,7 @@ export function FavoritesView({
   favorites,
   recent,
   isLoaded,
+  selected,
   onToggleFavorite,
   onView,
   onBack,
@@ -76,9 +81,9 @@ export function FavoritesView({
           {favRecipes.map((r, i) => (
             <RecipeCard
               key={r.id}
-              recipe={toWithMatch(r)}
+              recipe={toWithMatch(r, selected)}
               isFavorite
-              onView={() => onView(toWithMatch(r))}
+              onView={() => onView(toWithMatch(r, selected))}
               onToggleFavorite={() => onToggleFavorite(r.id)}
               onAskTara={() => onAskTara(r.name)}
               index={i}
@@ -100,9 +105,9 @@ export function FavoritesView({
             {recentRecipes.map((r, i) => (
               <RecipeCard
                 key={r.id}
-                recipe={toWithMatch(r)}
+                recipe={toWithMatch(r, selected)}
                 isFavorite={favorites.includes(r.id)}
-                onView={() => onView(toWithMatch(r))}
+                onView={() => onView(toWithMatch(r, selected))}
                 onToggleFavorite={() => onToggleFavorite(r.id)}
                 onAskTara={() => onAskTara(r.name)}
                 index={i}

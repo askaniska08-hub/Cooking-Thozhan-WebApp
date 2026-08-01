@@ -7,7 +7,7 @@ import {
 import type { RecipeWithMatch } from '@/types';
 import { Stars } from './ui/Stars';
 import { RippleButton } from './ui/RippleButton';
-import { cn, pluralize, isIngredientAvailable, getMissingIngredients } from '@/utils';
+import { cn, pluralize, getIngredientStatus } from '@/utils';
 
 interface RecipeModalProps {
   recipe: RecipeWithMatch | null;
@@ -29,7 +29,8 @@ export function RecipeModal({ recipe, selectedIngredients, isFavorite, onClose, 
   const [copied, setCopied] = useState(false);
   const [shared, setShared] = useState(false);
 
-  const missing = recipe ? getMissingIngredients(recipe.ingredients, selectedIngredients) : [];
+  const status = recipe ? getIngredientStatus(recipe.ingredients, selectedIngredients) : null;
+  const missing = status?.missingIngredients ?? [];
 
   const shoppingText = recipe
     ? `Shopping list for ${recipe.name}:\n${missing.map((m) => `• ${m}`).join('\n')}`
@@ -185,13 +186,11 @@ export function RecipeModal({ recipe, selectedIngredients, isFavorite, onClose, 
               </p>
               {/* Ingredients */}
               {(() => {
-                const available = recipe.ingredients.filter((i) => isIngredientAvailable(i, selectedIngredients));
-                const missingFromRecipe = recipe.ingredients.filter((i) => !isIngredientAvailable(i, selectedIngredients));
                 console.log('[RecipeModal Debug]', recipe.name, {
                   'Selected Ingredients': selectedIngredients,
                   'Recipe Ingredients': recipe.ingredients,
-                  'Available': available,
-                  'Missing': missingFromRecipe,
+                  'Available': status?.availableIngredients ?? [],
+                  'Missing': status?.missingIngredients ?? [],
                 });
                 return null;
               })()}
@@ -201,7 +200,7 @@ export function RecipeModal({ recipe, selectedIngredients, isFavorite, onClose, 
                 </h3>
                 <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
                   {recipe.ingredients.map((ing, idx) => {
-                    const have = isIngredientAvailable(ing, selectedIngredients);
+                    const have = (status?.availableIngredients ?? []).some((a) => a === ing);
                     return (
                       <div
                         key={`${ing}-${idx}`}

@@ -83,15 +83,11 @@ export default function App() {
   );
 
   const randomRecipe = useCallback(() => {
-    const pick = RECIPES[Math.floor(Math.random() * RECIPES.length)];
-    const matched = computeMatch(pick, selected) ?? {
-      ...pick,
-      matchPercent: 0,
-      matched: [],
-      missing: pick.ingredients,
-      stars: 3,
-    };
-    openRecipe(matched);
+    // Pick from recipes that meet the 45% threshold; fall back to any if none qualify
+    const eligible = RECIPES.map((r) => computeMatch(r, selected)).filter((r): r is RecipeWithMatch => r !== null);
+    const pool = eligible.length > 0 ? eligible : RECIPES;
+    const pick = pool[Math.floor(Math.random() * pool.length)];
+    openRecipe(pick);
   }, [selected, openRecipe]);
 
   const cookAnother = useCallback(() => {
@@ -113,13 +109,8 @@ export default function App() {
     (recipeId: string) => {
       const recipe = RECIPES.find((r) => r.id === recipeId);
       if (!recipe) return;
-      const matched = computeMatch(recipe, selected) ?? {
-        ...recipe,
-        matchPercent: 0,
-        matched: [],
-        missing: recipe.ingredients,
-        stars: 3,
-      };
+      const matched = computeMatch(recipe, selected);
+      if (!matched) return;
       setActiveRecipe(matched);
       pushRecent(recipe.id);
     },
@@ -175,6 +166,7 @@ export default function App() {
             favorites={favorites}
             recent={recent}
             isLoaded={isLoaded}
+            selected={selected}
             onToggleFavorite={toggleFavorite}
             onView={openRecipe}
             onBack={() => setView('home')}

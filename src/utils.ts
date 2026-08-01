@@ -70,19 +70,70 @@ export function extractIngredientsFromText(text: string): string[] {
   return [...found];
 }
 
+export interface IngredientStatus {
+  availableIngredients: string[];
+  missingIngredients: string[];
+  matchedCount: number;
+  totalIngredients: number;
+  matchPercentage: number;
+}
+
+/**
+ * THE single source of truth for ingredient matching.
+ *
+ * Normalizes every ingredient name (trim, lowercase, Unicode NFC) before
+ * comparison.  Compares ingredient names only — never objects, references,
+ * or categories.  No ingredient is ever hardcoded or special-cased.
+ *
+ * Returns available/missing lists (de-duplicated, recipe order preserved),
+ * counts, and a match percentage rounded to the nearest whole number.
+ */
+export function getIngredientStatus(
+  recipeIngredients: string[],
+  selected: string[],
+): IngredientStatus {
+  const selectedSet = new Set(selected.map(normalizeIngredient));
+
+  const seen = new Set<string>();
+  const availableIngredients: string[] = [];
+  const missingIngredients: string[] = [];
+
+  for (const ing of recipeIngredients) {
+    const norm = normalizeIngredient(ing);
+    if (seen.has(norm)) continue;
+    seen.add(norm);
+
+    const isAvailable = PANTRY_ALL.has(norm) || selectedSet.has(norm);
+    if (isAvailable) {
+      availableIngredients.push(ing);
+    } else {
+      missingIngredients.push(ing);
+    }
+  }
+
+  const matchedCount = availableIngredients.length;
+  const totalIngredients = matchedCount + missingIngredients.length;
+  const matchPercentage = totalIngredients === 0
+    ? 0
+    : Math.round((matchedCount / totalIngredients) * 100);
+
+  return {
+    availableIngredients,
+    missingIngredients,
+    matchedCount,
+    totalIngredients,
+    matchPercentage,
+  };
+}
+
 /**
  * Check whether a recipe ingredient is available to the user.
- *
- * An ingredient is "available" if:
- *   1. It is in the user's selected ingredients (case-insensitive, whitespace-normalized), OR
- *   2. It is a pantry staple (Salt, Cooking Oil, etc.) that is assumed to be on hand.
- *
- * This is the SINGLE source of truth for ingredient availability.
+ * Delegates to getIngredientStatus — never duplicates matching logic.
  */
 export function isIngredientAvailable(ingredient: string, selected: string[]): boolean {
   const norm = normalizeIngredient(ingredient);
-  if (PANTRY_ALL.has(norm)) return true;
-  return selected.some((s) => normalizeIngredient(s) === norm);
+  const selectedSet = new Set(selected.map(normalizeIngredient));
+  return PANTRY_ALL.has(norm) || selectedSet.has(norm);
 }
 
 /**
@@ -95,35 +146,18 @@ export function isKnownIngredient(ingredient: string): boolean {
 
 /**
  * Returns the display names of ingredients the user HAS available
- * (selected or pantry). De-duplicated, preserves recipe order.
+ * (selected or pantry). Delegates to getIngredientStatus.
  */
 export function getMatchedIngredients(recipeIngredients: string[], selected: string[]): string[] {
-  const seen = new Set<string>();
-  const result: string[] = [];
-  for (const ing of recipeIngredients) {
-    const n = normalizeIngredient(ing);
-    if (!isIngredientAvailable(ing, selected) || seen.has(n)) continue;
-    seen.add(n);
-    result.push(ing);
-  }
-  return result;
+  return getIngredientStatus(recipeIngredients, selected).availableIngredients;
 }
 
 /**
  * Returns the display names of ingredients the user does NOT have.
- * Pantry staples are excluded — they are assumed on hand.
- * De-duplicated, preserves recipe order.
+ * Delegates to getIngredientStatus.
  */
 export function getMissingIngredients(recipeIngredients: string[], selected: string[]): string[] {
-  const seen = new Set<string>();
-  const result: string[] = [];
-  for (const ing of recipeIngredients) {
-    const n = normalizeIngredient(ing);
-    if (isIngredientAvailable(ing, selected) || seen.has(n)) continue;
-    seen.add(n);
-    result.push(ing);
-  }
-  return result;
+  return getIngredientStatus(recipeIngredients, selected).missingIngredients;
 }
 
 /**

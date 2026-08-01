@@ -23,7 +23,7 @@ import { RECIPES } from '@/data/recipes';
 import { INGREDIENTS } from '@/data/ingredients';
 import { searchKnowledge } from '@/data/cookingKnowledge';
 import type { Recipe } from '@/types';
-import { normalizeIngredient, getMissingIngredients, getMatchedIngredients, extractIngredientsFromText } from '@/utils';
+import { normalizeIngredient, getIngredientStatus, extractIngredientsFromText } from '@/utils';
 import { detectIntent, findRecipeInQuery } from './intentDetector';
 import {
   type ConversationContext,
@@ -201,17 +201,15 @@ export function searchByIngredient(ingredient: string): Recipe[] {
 
 export function searchByMultipleIngredients(ingredients: string[]): TaraRecipeResult[] {
   const results = RECIPES.map((r) => {
-    const matched = getMatchedIngredients(r.ingredients, ingredients);
-    const missing = getMissingIngredients(r.ingredients, ingredients);
-    const matchPercent = Math.round((matched.length / (r.ingredients.length || 1)) * 100);
-    return { r, matched, missing, matchPercent };
+    const status = getIngredientStatus(r.ingredients, ingredients);
+    return { r, ...status };
   })
-    .filter((x) => x.matchPercent > 0)
-    .sort((a, b) => b.matchPercent - a.matchPercent || a.missing.length - b.missing.length);
+    .filter((x) => x.matchPercentage > 0)
+    .sort((a, b) => b.matchPercentage - a.matchPercentage || a.missingIngredients.length - b.missingIngredients.length);
   return results.slice(0, 8).map((x) => toResult(x.r, {
-    matchPercent: x.matchPercent,
-    matched: x.matched,
-    missing: x.missing,
+    matchPercent: x.matchPercentage,
+    matched: x.availableIngredients,
+    missing: x.missingIngredients,
   }));
 }
 
@@ -484,16 +482,15 @@ function handleRecipeInfo(query: string, context: ConversationContext): TaraResp
  */
 function formatRecipeCard(recipe: Recipe, context: ConversationContext): TaraResponse {
   const mentioned = context.mentionedIngredients.length > 0 ? context.mentionedIngredients : extractIngredients(recipe.name);
-  const matched = getMatchedIngredients(recipe.ingredients, mentioned);
-  const missing = getMissingIngredients(recipe.ingredients, mentioned);
-  const matchPercent = mentioned.length > 0 ? Math.round((matched.length / (matched.length + missing.length || 1)) * 100) : 0;
+  const status = getIngredientStatus(recipe.ingredients, mentioned);
+  const matchPercent = mentioned.length > 0 ? status.matchPercentage : 0;
 
   const matchLine = mentioned.length > 0
-    ? `\n\n**Match:** ${matchPercent}% — You have ${matched.length} of ${matched.length + missing.length} ingredients`
+    ? `\n\n**Match:** ${matchPercent}% — You have ${status.matchedCount} of ${status.totalIngredients} ingredients`
     : '';
 
-  const matchedText = matched.length > 0
-    ? `\n\n✅ **Available:** ${matched.join(', ')}`
+  const matchedText = status.availableIngredients.length > 0
+    ? `\n\n✅ **Available:** ${status.availableIngredients.join(', ')}`
     : '';
 
   let missingText = '';
@@ -538,10 +535,9 @@ function handleMissingIngredients(query: string, context: ConversationContext): 
 
   const recipe = found.recipe;
   const mentioned = context.mentionedIngredients.length > 0 ? context.mentionedIngredients : extractIngredients(query);
-  const matched = getMatchedIngredients(recipe.ingredients, mentioned);
-  const missing = getMissingIngredients(recipe.ingredients, mentioned);
+  const status = getIngredientStatus(recipe.ingredients, mentioned);
 
-  if (missing.length === 0) {
+  if (status.missingIngredients.length === 0) {
     return {
       text: `🎉 Great news! You have everything you need for **${recipe.name}**.
 
@@ -551,7 +547,7 @@ No missing ingredients — you're ready to cook!`,
   }
 
   // Add substitution suggestions for missing ingredients
-  const subs = missing
+  const subs = status.missingIngredients
     .map((m) => {
       const sub = getSubstitutionSuggestion(m);
       return sub ? `• No ${m}? ${sub}.` : null;
@@ -560,8 +556,8 @@ No missing ingredients — you're ready to cook!`,
   const subText = subs.length > 0 ? `\n\n💡 **Substitutions:**\n${subs.join('\n')}` : '';
 
   return {
-    text: `🛒 For **${recipe.name}**, you're still missing:\n\n${missing.map((m) => `• ${m}`).join('\n')}\n\nYou already have: ${matched.join(', ') || 'none mentioned yet'}.${subText}\n\nWant me to add these to a shopping list? Just say "add to shopping list"!`,
-    recipes: [toResult(recipe, { missing })],
+    text: `🛒 For **${recipe.name}**, you're still missing:\n\n${status.missingIngredients.map((m) => `• ${m}`).join('\n')}\n\nYou already have: ${status.availableIngredients.join(', ') || 'none mentioned yet'}.${subText}\n\nWant me to add these to a shopping list? Just say "add to shopping list"!`,
+    recipes: [toResult(recipe, { missing: status.missingIngredients })],
   };
 }
 
@@ -596,15 +592,15 @@ function handleShoppingList(context: ConversationContext): TaraResponse {
   if (!recipe) return fallbackResponse();
 
   const mentioned = context.mentionedIngredients;
-  const missing = getMissingIngredients(recipe.ingredients, mentioned);
+  const status = getIngredientStatus(recipe.ingredients, mentioned);
 
-  if (missing.length === 0) {
+  if (status.missingIngredients.length === 0) {
     return { text: `🎉 You already have everything you need for **${recipe.name}** — no shopping required! 🛍️` };
   }
 
   return {
-    text: `🛒 **Shopping List for ${recipe.name}:**\n\n${missing.map((m) => `☐ ${m}`).join('\n')}\n\nTake this to the store and you'll be ready to cook! 🛍️`,
-    recipes: [toResult(recipe, { missing })],
+    text: `🛒 **Shopping List for ${recipe.name}:**\n\n${status.missingIngredients.map((m) => `☐ ${m}`).join('\n')}\n\nTake this to the store and you'll be ready to cook! 🛍️`,
+    recipes: [toResult(recipe, { missing: status.missingIngredients })],
   };
 }
 
@@ -786,8 +782,8 @@ function handleIngredientSearch(query: string, context: ConversationContext): Ta
       }).join('\n\n');
 
       const perfect = results.filter((r) => r.matchPercent === 100);
-      const great = results.filter((r) => (r.matchPercent ?? 0) >= 60 && (r.matchPercent ?? 0) < 100);
-      const canTry = results.filter((r) => (r.matchPercent ?? 0) > 0 && (r.matchPercent ?? 0) < 60);
+      const great = results.filter((r) => (r.matchPercent ?? 0) >= 70 && (r.matchPercent ?? 0) < 100);
+      const canTry = results.filter((r) => (r.matchPercent ?? 0) >= 45 && (r.matchPercent ?? 0) < 70);
 
       let intro = `🍳 Nice! With ${allMentioned.join(', ')} you can make:\n\n`;
       if (perfect.length > 0) {

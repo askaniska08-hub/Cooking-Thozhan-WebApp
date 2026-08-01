@@ -25,6 +25,7 @@ function toWithMatch(r: Recipe, selected: string[]): RecipeWithMatch {
     ...r,
     matchPercent: status.matchPercentage,
     matched: status.availableIngredients,
+    pantryIngredients: status.pantryIngredients,
     missing: status.missingIngredients,
     stars,
   };

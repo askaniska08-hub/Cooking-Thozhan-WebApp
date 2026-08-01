@@ -28,6 +28,7 @@ export function computeMatch(recipe: Recipe, selected: string[]): RecipeWithMatc
     ...recipe,
     matchPercent: status.matchPercentage,
     matched: status.availableIngredients,
+    pantryIngredients: status.pantryIngredients,
     missing: status.missingIngredients,
     stars: computeStars(status.matchPercentage),
   };

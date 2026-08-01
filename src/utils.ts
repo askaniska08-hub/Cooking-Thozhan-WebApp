@@ -71,8 +71,13 @@ export function extractIngredientsFromText(text: string): string[] {
 }
 
 export interface IngredientStatus {
+  /** Ingredients the user explicitly selected — shown as ✅ Selected by You */
   availableIngredients: string[];
+  /** Pantry staples assumed on hand — shown as 🟡 Pantry Staple (never ✅) */
+  pantryIngredients: string[];
+  /** Everything else — shown as ❌ Missing */
   missingIngredients: string[];
+  /** Count of available + pantry (used for match %) */
   matchedCount: number;
   totalIngredients: number;
   matchPercentage: number;
@@ -81,12 +86,20 @@ export interface IngredientStatus {
 /**
  * THE single source of truth for ingredient matching.
  *
+ * Splits recipe ingredients into three buckets:
+ *   1. available  — explicitly selected by the user (✅ Selected by You)
+ *   2. pantry     — assumed on-hand staples (🟡 Pantry Staple, never ✅)
+ *   3. missing    — everything else (❌ Missing)
+ *
  * Normalizes every ingredient name (trim, lowercase, Unicode NFC) before
  * comparison.  Compares ingredient names only — never objects, references,
  * or categories.  No ingredient is ever hardcoded or special-cased.
  *
- * Returns available/missing lists (de-duplicated, recipe order preserved),
- * counts, and a match percentage rounded to the nearest whole number.
+ * Pantry staples are NEVER treated as user-selected.  They count toward
+ * match percentage but display separately so users are never misled.
+ *
+ * Returns de-duplicated lists (recipe order preserved), counts, and a
+ * match percentage rounded to the nearest whole number.
  */
 export function getIngredientStatus(
   recipeIngredients: string[],
@@ -96,6 +109,7 @@ export function getIngredientStatus(
 
   const seen = new Set<string>();
   const availableIngredients: string[] = [];
+  const pantryIngredients: string[] = [];
   const missingIngredients: string[] = [];
 
   for (const ing of recipeIngredients) {
@@ -103,15 +117,16 @@ export function getIngredientStatus(
     if (seen.has(norm)) continue;
     seen.add(norm);
 
-    const isAvailable = PANTRY_ALL.has(norm) || selectedSet.has(norm);
-    if (isAvailable) {
+    if (selectedSet.has(norm)) {
       availableIngredients.push(ing);
+    } else if (PANTRY_ALL.has(norm)) {
+      pantryIngredients.push(ing);
     } else {
       missingIngredients.push(ing);
     }
   }
 
-  const matchedCount = availableIngredients.length;
+  const matchedCount = availableIngredients.length + pantryIngredients.length;
   const totalIngredients = matchedCount + missingIngredients.length;
   const matchPercentage = totalIngredients === 0
     ? 0
@@ -119,6 +134,7 @@ export function getIngredientStatus(
 
   return {
     availableIngredients,
+    pantryIngredients,
     missingIngredients,
     matchedCount,
     totalIngredients,
@@ -127,13 +143,13 @@ export function getIngredientStatus(
 }
 
 /**
- * Check whether a recipe ingredient is available to the user.
+ * Check whether a recipe ingredient is available to the user
+ * (either explicitly selected or a pantry staple).
  * Delegates to getIngredientStatus — never duplicates matching logic.
  */
 export function isIngredientAvailable(ingredient: string, selected: string[]): boolean {
-  const norm = normalizeIngredient(ingredient);
-  const selectedSet = new Set(selected.map(normalizeIngredient));
-  return PANTRY_ALL.has(norm) || selectedSet.has(norm);
+  const status = getIngredientStatus([ingredient], selected);
+  return status.availableIngredients.length > 0 || status.pantryIngredients.length > 0;
 }
 
 /**
@@ -146,7 +162,8 @@ export function isKnownIngredient(ingredient: string): boolean {
 
 /**
  * Returns the display names of ingredients the user HAS available
- * (selected or pantry). Delegates to getIngredientStatus.
+ * (explicitly selected). Does NOT include pantry staples — those are
+ * separate. Delegates to getIngredientStatus.
  */
 export function getMatchedIngredients(recipeIngredients: string[], selected: string[]): string[] {
   return getIngredientStatus(recipeIngredients, selected).availableIngredients;
@@ -154,6 +171,7 @@ export function getMatchedIngredients(recipeIngredients: string[], selected: str
 
 /**
  * Returns the display names of ingredients the user does NOT have.
+ * Pantry staples are excluded — they are assumed on hand.
  * Delegates to getIngredientStatus.
  */
 export function getMissingIngredients(recipeIngredients: string[], selected: string[]): string[] {

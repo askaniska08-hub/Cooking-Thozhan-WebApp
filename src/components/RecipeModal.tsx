@@ -8,6 +8,7 @@ import type { RecipeWithMatch } from '@/types';
 import { Stars } from './ui/Stars';
 import { RippleButton } from './ui/RippleButton';
 import { cn, pluralize, getIngredientStatus } from '@/utils';
+import { Check, X, ChefHat, ShoppingBasket, Copy, CheckCheck, Heart, ListOrdered, MessageCircle, Share2, Printer, Sparkles } from 'lucide-react';
 
 interface RecipeModalProps {
   recipe: RecipeWithMatch | null;
@@ -185,39 +186,64 @@ export function RecipeModal({ recipe, selectedIngredients, isFavorite, onClose, 
                 {recipe.description}
               </p>
               {/* Ingredients */}
-              {(() => {
-                console.log('[RecipeModal Debug]', recipe.name, {
-                  'Selected Ingredients': selectedIngredients,
-                  'Recipe Ingredients': recipe.ingredients,
-                  'Available': status?.availableIngredients ?? [],
-                  'Missing': status?.missingIngredients ?? [],
-                });
-                return null;
-              })()}
               <section>
                 <h3 className="flex items-center gap-2 font-display text-lg font-bold text-ink dark:text-white">
                   <ChefHat size={18} className="text-primary" /> Ingredients
                 </h3>
-                <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
-                  {recipe.ingredients.map((ing, idx) => {
-                    const have = (status?.availableIngredients ?? []).some((a) => a === ing);
-                    return (
-                      <div
-                        key={`${ing}-${idx}`}
-                        className={cn(
-                          'flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium',
-                          have
-                            ? 'bg-accent/10 text-accent-600 dark:text-accent'
-                            : 'bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-300',
-                        )}
-                      >
-                        {have ? <Check size={15} className="shrink-0" /> : <X size={15} className="shrink-0" />}
-                        <span className="flex-1">{ing}</span>
-                        <span className="text-[10px] font-bold uppercase">{have ? 'Available' : 'Missing'}</span>
-                      </div>
-                    );
-                  })}
-                </div>
+
+                {/* ✅ Selected by You */}
+                {status && status.availableIngredients.length > 0 && (
+                  <div className="mt-3">
+                    <p className="mb-1.5 text-xs font-bold uppercase tracking-wide text-accent-600 dark:text-accent">
+                      ✅ Selected by You
+                    </p>
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                      {status.availableIngredients.map((ing, idx) => (
+                        <div key={`avail-${idx}`} className="flex items-center gap-2 rounded-xl bg-accent/10 px-3 py-2 text-sm font-medium text-accent-600 dark:text-accent">
+                          <Check size={15} className="shrink-0" />
+                          <span className="flex-1">{ing}</span>
+                          <span className="text-[10px] font-bold uppercase">Available</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* 🟡 Pantry Staples */}
+                {status && status.pantryIngredients.length > 0 && (
+                  <div className="mt-3">
+                    <p className="mb-1.5 text-xs font-bold uppercase tracking-wide text-amber-600 dark:text-amber-400">
+                      🟡 Pantry Staples
+                    </p>
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                      {status.pantryIngredients.map((ing, idx) => (
+                        <div key={`pantry-${idx}`} className="flex items-center gap-2 rounded-xl bg-amber-50 px-3 py-2 text-sm font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
+                          <Sparkles size={15} className="shrink-0" />
+                          <span className="flex-1">{ing}</span>
+                          <span className="text-[10px] font-bold uppercase">Pantry</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* ❌ Missing */}
+                {status && status.missingIngredients.length > 0 && (
+                  <div className="mt-3">
+                    <p className="mb-1.5 text-xs font-bold uppercase tracking-wide text-red-600 dark:text-red-400">
+                      ❌ Missing Ingredients
+                    </p>
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                      {status.missingIngredients.map((ing, idx) => (
+                        <div key={`miss-${idx}`} className="flex items-center gap-2 rounded-xl bg-red-50 px-3 py-2 text-sm font-medium text-red-700 dark:bg-red-500/10 dark:text-red-300">
+                          <X size={15} className="shrink-0" />
+                          <span className="flex-1">{ing}</span>
+                          <span className="text-[10px] font-bold uppercase">Missing</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </section>
 
               {/* Shopping list */}

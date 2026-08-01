@@ -493,11 +493,15 @@ function formatRecipeCard(recipe: Recipe, context: ConversationContext): TaraRes
     ? `\n\n✅ **Available:** ${status.availableIngredients.join(', ')}`
     : '';
 
+  const pantryText = status.pantryIngredients.length > 0
+    ? `\n\n🟡 **Pantry Staples:** ${status.pantryIngredients.join(', ')}`
+    : '';
+
   let missingText = '';
-  if (missing.length > 0) {
-    missingText = `\n\n❌ **Missing:** ${missing.join(', ')}`;
+  if (status.missingIngredients.length > 0) {
+    missingText = `\n\n❌ **Missing:** ${status.missingIngredients.join(', ')}`;
     // Add substitution suggestions for missing ingredients
-    const subs = missing
+    const subs = status.missingIngredients
       .map((m) => {
         const sub = getSubstitutionSuggestion(m);
         return sub ? `• No ${m}? ${sub}.` : null;
@@ -517,12 +521,12 @@ function formatRecipeCard(recipe: Recipe, context: ConversationContext): TaraRes
     text:
       `🍛 **${recipe.name}**\n\n` +
       `⏱ ${recipe.time} mins | 🥣 Serves ${recipe.servings} | 🔥 ${recipe.difficulty} | ${recipe.veg ? '🟢 Veg' : '🔴 Non-Veg'}` +
-      matchLine + matchedText + missingText +
+      matchLine + matchedText + pantryText + missingText +
       `\n\n**Ingredients**\n${recipe.ingredients.map((i) => `• ${i}`).join('\n')}` +
       `\n\n**Cooking Steps**\n${recipe.steps.map((s, i) => `${i + 1}. ${s}`).join('\n')}` +
       (recipe.tip ? `\n\n💡 **Pro Tip:** ${recipe.tip}` : '') +
       similarText,
-    recipes: [toResult(recipe, { matchPercent, matched, missing }), ...similar.map((r) => toResult(r))],
+    recipes: [toResult(recipe, { matchPercent, matched: status.availableIngredients, missing: status.missingIngredients }), ...similar.map((r) => toResult(r))],
   };
 }
 

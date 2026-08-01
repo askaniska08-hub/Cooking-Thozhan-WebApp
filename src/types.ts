@@ -63,6 +63,7 @@ export interface TaraRecipeResult {
 export interface RecipeWithMatch extends Recipe {
   matchPercent: number;
   matched: string[];
+  pantryIngredients: string[];
   missing: string[];
   stars: number;
 }

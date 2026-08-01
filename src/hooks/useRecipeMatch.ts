@@ -1,5 +1,5 @@
 import type { Recipe, RecipeWithMatch } from '@/types';
-import { isIngredientAvailable, normalizeIngredient } from '@/utils';
+import { isIngredientAvailable, normalizeIngredient, getMatchedIngredients, getMissingIngredients } from '@/utils';
 
 function computeStars(match: number): number {
   if (match >= 100) return 5;
@@ -13,19 +13,12 @@ export function computeMatch(recipe: Recipe, selected: string[]): RecipeWithMatc
   const mustOk = recipe.must.every((m) => isIngredientAvailable(m, selected));
   if (!mustOk) return null;
 
-  const matched: string[] = [];
-  const missing: string[] = [];
+  const matched = getMatchedIngredients(recipe.ingredients, selected);
+  const missing = getMissingIngredients(recipe.ingredients, selected);
+  const total = matched.length + missing.length;
 
-  recipe.ingredients.forEach((ing) => {
-    if (isIngredientAvailable(ing, selected)) {
-      matched.push(ing);
-    } else {
-      missing.push(ing);
-    }
-  });
-
-  // Match percent is based on ALL ingredients (pantry items count as available)
-  const matchPercent = Math.min(100, Math.max(0, Math.round((matched.length / (recipe.ingredients.length || 1)) * 100)));
+  // Match percent uses de-duplicated counts (no double-counting duplicates)
+  const matchPercent = Math.min(100, Math.max(0, Math.round((matched.length / (total || 1)) * 100)));
 
   return {
     ...recipe,
@@ -65,13 +58,13 @@ export function bucketMatches(recipes: Recipe[], selected: string[]): MatchBucke
 }
 
 export function searchRecipes(recipes: Recipe[], query: string): Recipe[] {
-  const q = query.trim().toLowerCase();
+  const q = normalizeIngredient(query);
   if (!q) return recipes;
   return recipes.filter(
     (r) =>
-      r.name.toLowerCase().includes(q) ||
-      r.category.toLowerCase().includes(q) ||
-      r.meal.toLowerCase().includes(q) ||
-      r.ingredients.some((i) => i.toLowerCase().includes(q)),
+      normalizeIngredient(r.name).includes(q) ||
+      normalizeIngredient(r.category).includes(q) ||
+      normalizeIngredient(r.meal).includes(q) ||
+      r.ingredients.some((i) => normalizeIngredient(i).includes(q)),
   );
 }

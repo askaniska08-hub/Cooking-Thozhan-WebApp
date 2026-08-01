@@ -51,6 +51,40 @@ export function isKnownIngredient(ingredient: string): boolean {
 }
 
 /**
+ * Returns the display names of ingredients the user HAS available
+ * (selected or pantry). De-duplicated, preserves recipe order.
+ */
+export function getMatchedIngredients(recipeIngredients: string[], selected: string[]): string[] {
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const ing of recipeIngredients) {
+    const n = normalizeIngredient(ing);
+    if (!isIngredientAvailable(ing, selected) || seen.has(n)) continue;
+    seen.add(n);
+    result.push(ing);
+  }
+  return result;
+}
+
+/**
+ * Returns the display names of ingredients the user does NOT have.
+ * Pantry staples are excluded — they are assumed on hand and should
+ * never appear in a shopping list or missing-ingredients list.
+ * De-duplicated, preserves recipe order.
+ */
+export function getMissingIngredients(recipeIngredients: string[], selected: string[]): string[] {
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const ing of recipeIngredients) {
+    const n = normalizeIngredient(ing);
+    if (isIngredientAvailable(ing, selected) || seen.has(n)) continue;
+    seen.add(n);
+    result.push(ing);
+  }
+  return result;
+}
+
+/**
  * Normalize an array of ingredient names, returning unique values.
  */
 export function normalizeIngredientList(ingredients: string[]): string[] {

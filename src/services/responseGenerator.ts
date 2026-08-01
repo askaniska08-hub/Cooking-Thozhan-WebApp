@@ -23,7 +23,7 @@ import { RECIPES } from '@/data/recipes';
 import { INGREDIENTS } from '@/data/ingredients';
 import { searchKnowledge } from '@/data/cookingKnowledge';
 import type { Recipe } from '@/types';
-import { isIngredientAvailable, normalizeIngredient } from '@/utils';
+import { isIngredientAvailable, normalizeIngredient, getMissingIngredients, getMatchedIngredients } from '@/utils';
 import { detectIntent, findRecipeInQuery, type TaraIntent } from './intentDetector';
 import {
   type ConversationContext,
@@ -175,10 +175,9 @@ export function searchByIngredient(ingredient: string): Recipe[] {
 }
 
 export function searchByMultipleIngredients(ingredients: string[]): TaraRecipeResult[] {
-  const normSet = new Set(ingredients.map(normalizeIngredient));
   const results = RECIPES.map((r) => {
-    const matched = r.ingredients.filter((i) => normSet.has(normalizeIngredient(i)));
-    const missing = r.ingredients.filter((i) => !normSet.has(normalizeIngredient(i)));
+    const matched = getMatchedIngredients(r.ingredients, ingredients);
+    const missing = getMissingIngredients(r.ingredients, ingredients);
     const matchPercent = Math.round((matched.length / (r.ingredients.length || 1)) * 100);
     return { r, matched, missing, matchPercent };
   })
@@ -192,9 +191,10 @@ export function searchByMultipleIngredients(ingredients: string[]): TaraRecipeRe
 }
 
 export function findSimilarRecipes(recipe: Recipe): Recipe[] {
+  const recipeIngSet = new Set(recipe.ingredients.map(normalizeIngredient));
   const sameCategory = RECIPES.filter((r) => r.category === recipe.category && r.id !== recipe.id);
   const sharedIngredients = RECIPES.filter((r) => r.id !== recipe.id).map((r) => {
-    const shared = r.ingredients.filter((i) => recipe.ingredients.includes(i)).length;
+    const shared = r.ingredients.filter((i) => recipeIngSet.has(normalizeIngredient(i))).length;
     return { r, shared };
   }).sort((a, b) => b.shared - a.shared).slice(0, 5).map((x) => x.r);
 

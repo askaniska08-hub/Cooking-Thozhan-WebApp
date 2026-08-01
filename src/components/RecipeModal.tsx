@@ -7,7 +7,7 @@ import {
 import type { RecipeWithMatch } from '@/types';
 import { Stars } from './ui/Stars';
 import { RippleButton } from './ui/RippleButton';
-import { cn, pluralize, isIngredientAvailable } from '@/utils';
+import { cn, pluralize, isIngredientAvailable, getMissingIngredients } from '@/utils';
 
 interface RecipeModalProps {
   recipe: RecipeWithMatch | null;
@@ -29,7 +29,7 @@ export function RecipeModal({ recipe, selectedIngredients, isFavorite, onClose, 
   const [copied, setCopied] = useState(false);
   const [shared, setShared] = useState(false);
 
-  const missing = recipe ? recipe.ingredients.filter((ing) => !isIngredientAvailable(ing, selectedIngredients)) : [];
+  const missing = recipe ? getMissingIngredients(recipe.ingredients, selectedIngredients) : [];
 
   const shoppingText = recipe
     ? `Shopping list for ${recipe.name}:\n${missing.map((m) => `• ${m}`).join('\n')}`

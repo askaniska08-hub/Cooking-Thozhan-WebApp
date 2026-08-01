@@ -63,7 +63,7 @@ export const batch6: Recipe[] = [
     category: 'Salads',
     description: 'A refreshing Korean cucumber salad with spicy, tangy, and slightly sweet flavours.',
     must: ['Cucumber', 'Red Chilli Powder'],
-    ingredients: ['Cucumber', 'Red Chilli Powder', 'Garlic', 'White Sugar', 'Salt', 'Sesame Oil', 'Vinegar'],
+    ingredients: ['Cucumber', 'Red Chilli Powder', 'Garlic', 'Salt', 'Sesame Oil', 'Vinegar'],
     time: 15,
     difficulty: 'Easy',
     servings: 2,

@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, RotateCcw } from 'lucide-react';
 import type { Ingredient } from '@/types';
+import { normalizeIngredient } from '@/utils';
 
 interface SelectedPillsProps {
   selected: string[];
@@ -10,7 +11,7 @@ interface SelectedPillsProps {
 }
 
 const emojiByName = (name: string, list: Ingredient[]) =>
-  list.find((i) => i.name === name)?.emoji ?? '🥄';
+  list.find((i) => normalizeIngredient(i.name) === normalizeIngredient(name))?.emoji ?? '🥄';
 
 export function SelectedPills({ selected, ingredients, onRemove, onClear }: SelectedPillsProps) {
   return (

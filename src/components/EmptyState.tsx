@@ -4,6 +4,7 @@ import { RippleButton } from './ui/RippleButton';
 
 interface EmptyStateProps {
   onReset: () => void;
+  onAddIngredients?: () => void;
   title?: string;
   message?: string;
   variant?: 'recipes' | 'favorites';
@@ -12,6 +13,7 @@ interface EmptyStateProps {
 
 export function EmptyState({
   onReset,
+  onAddIngredients,
   title = 'No matching dishes found',
   message = 'Try adding more ingredients so we can find recipes for you.',
   variant = 'recipes',
@@ -42,7 +44,10 @@ export function EmptyState({
           </RippleButton>
         ) : (
           <>
-            <RippleButton onClick={onReset} className="btn-primary px-6 py-3">
+            <RippleButton
+              onClick={() => onAddIngredients?.() ?? onReset()}
+              className="btn-primary px-6 py-3"
+            >
               <Plus size={18} /> Add Ingredients
             </RippleButton>
             <RippleButton onClick={onReset} className="btn-ghost px-6 py-3">

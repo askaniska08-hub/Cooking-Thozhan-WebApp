@@ -14,13 +14,14 @@ interface ResultsSectionProps {
   onToggleFavorite: (id: string) => void;
   onReset: () => void;
   onAskTara: (recipeName: string) => void;
+  onAddIngredients: () => void;
 }
 
-export function ResultsSection({ buckets, favorites, onView, onToggleFavorite, onReset, onAskTara }: ResultsSectionProps) {
+export function ResultsSection({ buckets, favorites, onView, onToggleFavorite, onReset, onAskTara, onAddIngredients }: ResultsSectionProps) {
   if (buckets.total === 0) {
     return (
       <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
-        <EmptyState onReset={onReset} />
+        <EmptyState onReset={onReset} onAddIngredients={onAddIngredients} />
       </section>
     );
   }

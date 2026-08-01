@@ -138,6 +138,7 @@ export default function App() {
                   onToggleFavorite={toggleFavorite}
                   onReset={clearIngredients}
                   onAskTara={(name) => askTara(name)}
+                  onAddIngredients={() => document.getElementById('ingredients')?.scrollIntoView({ behavior: 'smooth' })}
                 />
               )}
             </div>

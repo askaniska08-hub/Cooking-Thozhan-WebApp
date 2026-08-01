@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { SlidersHorizontal, Sparkles } from 'lucide-react';
 import { INGREDIENTS, CATEGORY_META } from '@/data/ingredients';
 import type { IngredientCategory } from '@/types';
+import { normalizeIngredient } from '@/utils';
 import { SearchBar } from './SearchBar';
 import { CategoryFilter } from './CategoryFilter';
 import { SelectedPills } from './SelectedPills';
@@ -31,9 +32,9 @@ export function IngredientSelector({ selected, onToggle, onClear, onFind }: Ingr
   }, []);
 
   const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
+    const q = normalizeIngredient(query);
     return INGREDIENTS.filter((i) => {
-      const matchQ = !q || i.name.toLowerCase().includes(q);
+      const matchQ = !q || normalizeIngredient(i.name).includes(q);
       const matchC = activeCat === 'All' || i.category === activeCat;
       return matchQ && matchC;
     });

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X, Clock, Flame, Users, ArrowLeft, ChefHat, Check, ShoppingBasket,
@@ -62,22 +62,41 @@ export function RecipeModal({ recipe, selectedIngredients, isFavorite, onClose, 
     if (!recipe || missing.length === 0) return;
     const win = window.open('', '_blank', 'width=400,height=600');
     if (!win) return;
-    win.document.write(`<html><head><title>Shopping List — ${recipe.name}</title><style>body{font-family:system-ui,sans-serif;padding:32px}h1{font-size:20px}ul{font-size:16px;line-height:1.8}</style></head><body><h1>Shopping List — ${recipe.name}</h1><ul>${missing.map((m) => `<li>${m}</li>`).join('')}</ul></body></html>`);
+    const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] ?? c));
+    win.document.write(`<html><head><title>Shopping List — ${esc(recipe.name)}</title><style>body{font-family:system-ui,sans-serif;padding:32px}h1{font-size:20px}ul{font-size:16px;line-height:1.8}</style></head><body><h1>Shopping List — ${esc(recipe.name)}</h1><ul>${missing.map((m) => `<li>${esc(m)}</li>`).join('')}</ul></body></html>`);
     win.document.close();
     win.focus();
     win.print();
   };
 
+  const modalRef = useRef<HTMLDivElement>(null);
+  const previousFocus = useRef<HTMLElement | null>(null);
+
   useEffect(() => {
     if (!recipe) return;
+    previousFocus.current = document.activeElement as HTMLElement | null;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') { onClose(); return; }
+      if (e.key === 'Tab' && modalRef.current) {
+        const focusables = modalRef.current.querySelectorAll<HTMLElement>('button, a, input, [tabindex]:not([tabindex="-1"])');
+        if (focusables.length === 0) return;
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
     };
     document.body.style.overflow = 'hidden';
     window.addEventListener('keydown', onKey);
+    // Focus the close button or first focusable element
+    requestAnimationFrame(() => {
+      const focusables = modalRef.current?.querySelectorAll<HTMLElement>('button, a, input, [tabindex]:not([tabindex="-1"])');
+      focusables?.[0]?.focus();
+    });
     return () => {
       document.body.style.overflow = '';
       window.removeEventListener('keydown', onKey);
+      previousFocus.current?.focus();
     };
   }, [recipe, onClose]);
 
@@ -95,6 +114,7 @@ export function RecipeModal({ recipe, selectedIngredients, isFavorite, onClose, 
           aria-label={`${recipe.name} recipe details`}
         >
           <motion.div
+            ref={modalRef}
             initial={{ opacity: 0, scale: 0.94, y: 24 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.94, y: 24 }}
@@ -161,11 +181,11 @@ export function RecipeModal({ recipe, selectedIngredients, isFavorite, onClose, 
                   <ChefHat size={18} className="text-primary" /> Ingredients
                 </h3>
                 <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
-                  {recipe.ingredients.map((ing) => {
+                  {recipe.ingredients.map((ing, idx) => {
                     const have = isIngredientAvailable(ing, selectedIngredients);
                     return (
                       <div
-                        key={ing}
+                        key={`${ing}-${idx}`}
                         className={cn(
                           'flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium',
                           have

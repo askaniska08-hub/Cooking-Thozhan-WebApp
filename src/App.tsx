@@ -15,8 +15,9 @@ import type { Recipe, RecipeWithMatch } from '@/types';
 import { useFavorites } from '@/context/FavoritesContext';
 import { MessageCircle } from 'lucide-react';
 import { NonVegToggle } from '@/components/NonVegToggle';
+import { MealPlannerView } from '@/components/MealPlannerView';
 
-type View = 'home' | 'favorites';
+type View = 'home' | 'favorites' | 'planner';
 
 class ErrorBoundary extends Component<
   { children: ReactNode },
@@ -139,6 +140,7 @@ export default function App() {
         favoritesLoaded={isLoaded}
         activeView={view}
         onAskTara={() => askTara()}
+        onShowPlanner={() => setView('planner')}
       />
 
       <main className="flex-1">
@@ -147,6 +149,7 @@ export default function App() {
             <Hero
               onStart={() => document.getElementById('ingredients')?.scrollIntoView({ behavior: 'smooth' })}
               onAskTara={() => askTara()}
+              onShowPlanner={() => setView('planner')}
             />
             <IngredientSelector
               selected={selected}
@@ -170,6 +173,12 @@ export default function App() {
               )}
             </div>
           </>
+        ) : view === 'planner' ? (
+          <MealPlannerView
+            availableIngredients={selected}
+            onViewRecipe={openRecipe}
+            onBack={() => setView('home')}
+          />
         ) : (
           <FavoritesView
             recipes={visibleRecipes}

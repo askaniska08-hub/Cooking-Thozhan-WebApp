@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { Moon, Sun, Heart, Sparkles, MessageCircle } from 'lucide-react';
+import { Moon, Sun, Heart, Sparkles, MessageCircle, CalendarDays } from 'lucide-react';
 import type { Theme } from '@/hooks/useTheme';
 import { cn } from '@/utils';
 import { Logo } from './Logo';
@@ -11,11 +11,12 @@ interface NavbarProps {
   onRandom: () => void;
   favoritesCount: number;
   favoritesLoaded: boolean;
-  activeView: 'home' | 'favorites';
+  activeView: 'home' | 'favorites' | 'planner';
   onAskTara: () => void;
+  onShowPlanner: () => void;
 }
 
-export function Navbar({ theme, onToggleTheme, onShowFavorites, onRandom, favoritesCount, favoritesLoaded, activeView, onAskTara }: NavbarProps) {
+export function Navbar({ theme, onToggleTheme, onShowFavorites, onRandom, favoritesCount, favoritesLoaded, activeView, onAskTara, onShowPlanner }: NavbarProps) {
   return (
     <motion.header
       initial={{ y: -80, opacity: 0 }}
@@ -38,6 +39,15 @@ export function Navbar({ theme, onToggleTheme, onShowFavorites, onRandom, favori
           </a>
 
           <div className="flex items-center gap-1.5 sm:gap-2">
+            <button
+              onClick={onShowPlanner}
+              className={cn('btn-ghost hidden px-3 py-2 text-sm sm:inline-flex', activeView === 'planner' && 'bg-primary/10')}
+              aria-label="AI Meal Planner"
+            >
+              <CalendarDays size={16} className="text-primary" />
+              <span className="hidden md:inline">Meal Planner</span>
+            </button>
+
             <button
               onClick={onAskTara}
               className="btn-ghost hidden px-3 py-2 text-sm sm:inline-flex"

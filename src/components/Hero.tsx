@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { ChefHat, ArrowRight, Sparkles, MessageCircle, UtensilsCrossed } from 'lucide-react';
+import { ChefHat, ArrowRight, Sparkles, MessageCircle, UtensilsCrossed, CalendarDays } from 'lucide-react';
 import { RippleButton } from './ui/RippleButton';
 import { ChefTara } from './ChefTara';
 import { RECIPES } from '@/data/recipes';
@@ -12,9 +12,10 @@ const ingredientCount = `${INGREDIENTS.length}+`;
 interface HeroProps {
   onStart: () => void;
   onAskTara: () => void;
+  onShowPlanner: () => void;
 }
 
-export function Hero({ onStart, onAskTara }: HeroProps) {
+export function Hero({ onStart, onAskTara, onShowPlanner }: HeroProps) {
   return (
     <section id="top" className="relative overflow-hidden px-4 pt-10 sm:px-6 sm:pt-16">
       {/* decorative blobs */}
@@ -103,6 +104,9 @@ export function Hero({ onStart, onAskTara }: HeroProps) {
             <RippleButton onClick={onStart} className="btn-primary group/btn px-7 py-3.5 text-base">
               <ChefHat size={20} /> Start Cooking
               <ArrowRight size={18} className="transition-transform group-hover/btn:translate-x-1" />
+            </RippleButton>
+            <RippleButton onClick={onShowPlanner} className="btn-ghost border border-accent/30 px-6 py-3.5 text-base hover:bg-accent/10">
+              <CalendarDays size={20} /> Meal Planner
             </RippleButton>
             <RippleButton onClick={onAskTara} className="btn-ghost border border-primary/30 px-6 py-3.5 text-base hover:bg-primary/10">
               <MessageCircle size={20} /> Ask Chef Tara

@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { RotateCcw } from 'lucide-react';
 import type { RecipeWithMatch } from '@/types';
 import type { MatchBuckets } from '@/hooks/useRecipeMatch';
@@ -6,6 +6,7 @@ import { RecipeGrid, SectionHeader } from './RecipeGrid';
 import { RecipeCard } from './RecipeCard';
 import { EmptyState } from './EmptyState';
 import { RippleButton } from './ui/RippleButton';
+import { NonVegToggle } from './NonVegToggle';
 
 interface ResultsSectionProps {
   buckets: MatchBuckets;
@@ -15,9 +16,11 @@ interface ResultsSectionProps {
   onReset: () => void;
   onAskTara: (recipeName: string) => void;
   onAddIngredients: () => void;
+  showNonVeg: boolean;
+  onToggleNonVeg: (enabled: boolean) => void;
 }
 
-export function ResultsSection({ buckets, favorites, onView, onToggleFavorite, onReset, onAskTara, onAddIngredients }: ResultsSectionProps) {
+export function ResultsSection({ buckets, favorites, onView, onToggleFavorite, onReset, onAskTara, onAddIngredients, showNonVeg, onToggleNonVeg }: ResultsSectionProps) {
   if (buckets.total === 0) {
     return (
       <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
@@ -37,9 +40,12 @@ export function ResultsSection({ buckets, favorites, onView, onToggleFavorite, o
           🎉 We found <span className="text-primary">{buckets.total}</span> matching {buckets.total === 1 ? 'recipe' : 'recipes'} for you!
         </h2>
         <p className="mt-2 text-gray-600 dark:text-gray-400">Sorted by how many ingredients you already have.</p>
-        <RippleButton onClick={onReset} className="btn-ghost mt-4 px-4 py-2 text-sm">
-          <RotateCcw size={15} /> Reset ingredients
-        </RippleButton>
+        <div className="mt-4 flex flex-wrap items-center justify-center gap-4">
+          <RippleButton onClick={onReset} className="btn-ghost px-4 py-2 text-sm">
+            <RotateCcw size={15} /> Reset ingredients
+          </RippleButton>
+          <NonVegToggle enabled={showNonVeg} onChange={onToggleNonVeg} />
+        </div>
       </motion.div>
 
       <div className="space-y-10">

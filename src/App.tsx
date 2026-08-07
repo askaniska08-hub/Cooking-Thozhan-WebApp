@@ -8,11 +8,13 @@ import { FavoritesView } from '@/components/FavoritesView';
 import { Footer } from '@/components/Footer';
 import { TaraChat } from '@/components/TaraChat';
 import { useTheme } from '@/hooks/useTheme';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { bucketMatches, computeMatch } from '@/hooks/useRecipeMatch';
 import { RECIPES } from '@/data/recipes';
-import type { RecipeWithMatch } from '@/types';
+import type { Recipe, RecipeWithMatch } from '@/types';
 import { useFavorites } from '@/context/FavoritesContext';
 import { MessageCircle } from 'lucide-react';
+import { NonVegToggle } from '@/components/NonVegToggle';
 
 type View = 'home' | 'favorites';
 
@@ -44,6 +46,12 @@ export default function App() {
   const [hasSearched, setHasSearched] = useState(false);
   const [activeRecipe, setActiveRecipe] = useState<RecipeWithMatch | null>(null);
   const [view, setView] = useState<View>('home');
+  const [showNonVeg, setShowNonVeg] = useLocalStorage<boolean>('ct_nonveg', false);
+
+  const visibleRecipes = useMemo(
+    () => (showNonVeg ? RECIPES : RECIPES.filter((r) => r.veg)),
+    [showNonVeg],
+  );
 
   // Chef Tara chat state
   const [taraOpen, setTaraOpen] = useState(false);
@@ -52,8 +60,8 @@ export default function App() {
   const resultsRef = useRef<HTMLDivElement>(null);
 
   const buckets = useMemo(
-    () => (hasSearched ? bucketMatches(RECIPES, selected) : { perfect: [], great: [], tryAlso: [], total: 0 }),
-    [hasSearched, selected],
+    () => (hasSearched ? bucketMatches(visibleRecipes, selected) : { perfect: [], great: [], tryAlso: [], total: 0 }),
+    [hasSearched, selected, visibleRecipes],
   );
 
   const toggleIngredient = useCallback((name: string) => {
@@ -84,11 +92,11 @@ export default function App() {
 
   const randomRecipe = useCallback(() => {
     // Pick from recipes that meet the 45% threshold; fall back to any if none qualify
-    const eligible = RECIPES.map((r) => computeMatch(r, selected)).filter((r): r is RecipeWithMatch => r !== null);
-    const pool = eligible.length > 0 ? eligible : RECIPES;
+    const eligible = visibleRecipes.map((r) => computeMatch(r, selected)).filter((r): r is RecipeWithMatch => r !== null);
+    const pool = eligible.length > 0 ? eligible : visibleRecipes;
     const pick = pool[Math.floor(Math.random() * pool.length)];
     openRecipe(pick);
-  }, [selected, openRecipe]);
+  }, [selected, visibleRecipes, openRecipe]);
 
   const cookAnother = useCallback(() => {
     setActiveRecipe(null);
@@ -107,14 +115,14 @@ export default function App() {
 
   const handleTaraRecipeClick = useCallback(
     (recipeId: string) => {
-      const recipe = RECIPES.find((r) => r.id === recipeId);
+      const recipe = visibleRecipes.find((r) => r.id === recipeId);
       if (!recipe) return;
       const matched = computeMatch(recipe, selected);
       if (!matched) return;
       setActiveRecipe(matched);
       pushRecent(recipe.id);
     },
-    [selected, pushRecent],
+    [selected, visibleRecipes, pushRecent],
   );
 
   const activeRecipeFavorite = activeRecipe ? isFavorite(activeRecipe.id) : false;
@@ -156,13 +164,15 @@ export default function App() {
                   onReset={clearIngredients}
                   onAskTara={(name) => askTara(name)}
                   onAddIngredients={() => document.getElementById('ingredients')?.scrollIntoView({ behavior: 'smooth' })}
+                  showNonVeg={showNonVeg}
+                  onToggleNonVeg={setShowNonVeg}
                 />
               )}
             </div>
           </>
         ) : (
           <FavoritesView
-            recipes={RECIPES}
+            recipes={visibleRecipes}
             favorites={favorites}
             recent={recent}
             isLoaded={isLoaded}

@@ -25,6 +25,21 @@ import { searchKnowledge } from '@/data/cookingKnowledge';
 import type { Recipe } from '@/types';
 import { normalizeIngredient, getIngredientStatus, extractIngredientsFromText } from '@/utils';
 import { detectIntent, findRecipeInQuery } from './intentDetector';
+
+/**
+ * Module-level diet filter. When false (default), TARA only recommends
+ * vegetarian recipes. Set via setDietFilter from the UI toggle.
+ */
+let dietFilterShowNonVeg = false;
+
+export function setDietFilter(showNonVeg: boolean): void {
+  dietFilterShowNonVeg = showNonVeg;
+}
+
+/** Returns the recipe pool respecting the current diet filter. */
+function recipePool(): Recipe[] {
+  return dietFilterShowNonVeg ? RECIPES : RECIPES.filter((r) => r.veg);
+}
 import {
   type ConversationContext,
   createContext,

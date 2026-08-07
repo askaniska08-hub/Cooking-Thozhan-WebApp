@@ -55,10 +55,11 @@ function starsFor(level: MatchLevel): string {
 }
 
 /** Rank all recipes against the given ingredients. */
-export function rankRecipes(ingredients: string[]): RecipeRanking {
+export function rankRecipes(ingredients: string[], showNonVeg = false): RecipeRanking {
   const ranked: RankedRecipe[] = [];
 
   for (const recipe of RECIPES) {
+    if (!showNonVeg && !recipe.veg) continue;
     const match = computeMatch(recipe, ingredients);
     if (!match) continue;  // null = below 45% threshold or must-ingredients not met
     if (match.matchPercent < MIN_MATCH_THRESHOLD) continue;

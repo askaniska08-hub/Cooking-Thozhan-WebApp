@@ -15,9 +15,10 @@ interface IngredientSelectorProps {
   onToggle: (name: string) => void;
   onClear: () => void;
   onFind: () => void;
+  returnToPlanner?: boolean;
 }
 
-export function IngredientSelector({ selected, onToggle, onClear, onFind }: IngredientSelectorProps) {
+export function IngredientSelector({ selected, onToggle, onClear, onFind, returnToPlanner }: IngredientSelectorProps) {
   const [query, setQuery] = useState('');
   const [activeCat, setActiveCat] = useState<IngredientCategory | 'All'>('All');
 
@@ -115,7 +116,11 @@ export function IngredientSelector({ selected, onToggle, onClear, onFind }: Ingr
             className="btn-primary px-8 py-3.5 text-base shadow-glow"
           >
             <Sparkles size={18} />
-            {selected.length === 0 ? 'Select ingredients to continue' : `Find Recipes · ${selected.length} selected`}
+            {selected.length === 0
+              ? 'Select ingredients to continue'
+              : returnToPlanner
+                ? `Confirm · ${selected.length} selected`
+                : `Find Recipes · ${selected.length} selected`}
           </RippleButton>
         </div>
       </div>

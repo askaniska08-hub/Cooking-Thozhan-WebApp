@@ -11,7 +11,7 @@ interface NavbarProps {
   onRandom: () => void;
   favoritesCount: number;
   favoritesLoaded: boolean;
-  activeView: 'home' | 'favorites' | 'planner';
+  activeView: 'home' | 'favorites' | 'planner' | 'select-ingredients';
   onAskTara: () => void;
   onShowPlanner: () => void;
 }
@@ -41,10 +41,22 @@ export function Navbar({ theme, onToggleTheme, onShowFavorites, onRandom, favori
           <div className="flex items-center gap-1.5 sm:gap-2">
             <button
               onClick={onShowPlanner}
-              className={cn('btn-ghost hidden px-3 py-2 text-sm sm:inline-flex', activeView === 'planner' && 'bg-primary/10')}
+              className={cn(
+                'btn-ghost hidden items-center gap-1.5 rounded-xl px-3 py-2 text-sm transition-all duration-300 sm:inline-flex',
+                'border border-transparent',
+                activeView === 'planner'
+                  ? 'bg-[#34C759]/15 text-[#34C759] shadow-[0_0_12px_rgba(52,199,89,0.25)] dark:bg-[#34C759]/20 dark:text-[#30D158]'
+                  : 'text-gray-600 hover:bg-[#34C759]/10 hover:text-[#34C759] hover:shadow-[0_0_10px_rgba(52,199,89,0.15)] dark:text-gray-300 dark:hover:text-[#30D158] dark:hover:bg-[#34C759]/10',
+              )}
               aria-label="AI Meal Planner"
             >
-              <CalendarDays size={16} className="text-primary" />
+              <CalendarDays
+                size={16}
+                className={cn(
+                  'transition-colors',
+                  activeView === 'planner' ? 'text-[#34C759] dark:text-[#30D158]' : 'text-[#34C759]/70 dark:text-[#30D158]/70',
+                )}
+              />
               <span className="hidden md:inline">Meal Planner</span>
             </button>
 

@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Sparkles, Check, Leaf } from 'lucide-react';
+import { Sparkles, Check, Leaf, ShoppingBasket, AlertCircle } from 'lucide-react';
 import { cn } from '@/utils';
 import type { PlannerConfig, PlannerGoal, MealType } from '@/types';
 import { GOAL_META, DURATION_META, MEAL_META } from '@/services/mealPlanner';
@@ -10,9 +10,10 @@ interface PlannerSetupProps {
   onChange: (config: PlannerConfig) => void;
   onGenerate: () => void;
   availableIngredientCount: number;
+  onSelectIngredients: () => void;
 }
 
-export function PlannerSetup({ config, onChange, onGenerate, availableIngredientCount }: PlannerSetupProps) {
+export function PlannerSetup({ config, onChange, onGenerate, availableIngredientCount, onSelectIngredients }: PlannerSetupProps) {
   const toggleMeal = (meal: MealType) => {
     const has = config.meals.includes(meal);
     onChange({
@@ -21,7 +22,8 @@ export function PlannerSetup({ config, onChange, onGenerate, availableIngredient
     });
   };
 
-  const canGenerate = config.meals.length > 0;
+  const hasNoIngredients = config.useAvailableIngredients && availableIngredientCount === 0;
+  const canGenerate = config.meals.length > 0 && !hasNoIngredients;
 
   return (
     <motion.div
@@ -148,7 +150,7 @@ export function PlannerSetup({ config, onChange, onGenerate, availableIngredient
                 <p className="text-xs text-gray-500 dark:text-gray-400">
                   {availableIngredientCount > 0
                     ? `${availableIngredientCount} ingredients selected`
-                    : 'Select ingredients on the home page'}
+                    : 'No ingredients selected yet'}
                 </p>
               </div>
             </div>
@@ -166,6 +168,32 @@ export function PlannerSetup({ config, onChange, onGenerate, availableIngredient
               />
             </span>
           </button>
+
+          {/* Select Ingredients button / empty state */}
+          {config.useAvailableIngredients && hasNoIngredients ? (
+            <div className="mt-3 rounded-2xl border-2 border-dashed border-amber-300 bg-amber-50 p-4 text-center dark:border-amber-500/30 dark:bg-amber-500/10">
+              <div className="mb-1 flex items-center justify-center gap-2 text-amber-600 dark:text-amber-400">
+                <AlertCircle size={18} />
+                <span className="font-bold text-sm">No ingredients selected yet</span>
+              </div>
+              <p className="mb-3 text-xs text-amber-600/80 dark:text-amber-400/80">
+                Select the ingredients you currently have so we can build a smarter meal plan.
+              </p>
+              <button
+                onClick={onSelectIngredients}
+                className="btn-primary inline-flex items-center gap-2 rounded-2xl px-5 py-2.5 text-sm"
+              >
+                <ShoppingBasket size={16} /> Select Ingredients
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={onSelectIngredients}
+              className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-primary/30 bg-primary/5 px-4 py-3 font-bold text-primary transition-all hover:border-primary hover:bg-primary/10 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+            >
+              <ShoppingBasket size={18} /> Select Ingredients
+            </button>
+          )}
         </Section>
       </div>
 
@@ -180,7 +208,11 @@ export function PlannerSetup({ config, onChange, onGenerate, availableIngredient
         </button>
       </div>
       {!canGenerate && (
-        <p className="mt-2 text-center text-sm text-gray-400">Select at least one meal to continue</p>
+        <p className="mt-2 text-center text-sm text-gray-400">
+          {hasNoIngredients
+            ? 'Select ingredients first to generate a smart meal plan'
+            : 'Select at least one meal to continue'}
+        </p>
       )}
     </motion.div>
   );

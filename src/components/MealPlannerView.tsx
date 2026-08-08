@@ -12,6 +12,7 @@ interface MealPlannerViewProps {
   availableIngredients: string[];
   onViewRecipe: (recipe: RecipeWithMatch) => void;
   onBack: () => void;
+  onSelectIngredients: () => void;
 }
 
 type Phase = 'setup' | 'loading' | 'results';
@@ -24,7 +25,7 @@ const DEFAULT_CONFIG: PlannerConfig = {
   useAvailableIngredients: true,
 };
 
-export function MealPlannerView({ availableIngredients, onViewRecipe, onBack }: MealPlannerViewProps) {
+export function MealPlannerView({ availableIngredients, onViewRecipe, onBack, onSelectIngredients }: MealPlannerViewProps) {
   const [config, setConfig] = useState<PlannerConfig>(DEFAULT_CONFIG);
   const [phase, setPhase] = useState<Phase>('setup');
   const [result, setResult] = useState<PlannerResult | null>(null);
@@ -90,6 +91,7 @@ export function MealPlannerView({ availableIngredients, onViewRecipe, onBack }: 
               onChange={setConfig}
               onGenerate={handleGenerate}
               availableIngredientCount={availableIngredients.length}
+              onSelectIngredients={onSelectIngredients}
             />
           </motion.div>
         )}

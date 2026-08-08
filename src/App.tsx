@@ -16,7 +16,7 @@ import { useFavorites } from '@/context/FavoritesContext';
 import { MessageCircle } from 'lucide-react';
 import { MealPlannerView } from '@/components/MealPlannerView';
 
-type View = 'home' | 'favorites' | 'planner';
+type View = 'home' | 'favorites' | 'planner' | 'select-ingredients';
 
 class ErrorBoundary extends Component<
   { children: ReactNode },
@@ -169,6 +169,15 @@ export default function App() {
             availableIngredients={selected}
             onViewRecipe={openRecipe}
             onBack={() => setView('home')}
+            onSelectIngredients={() => setView('select-ingredients')}
+          />
+        ) : view === 'select-ingredients' ? (
+          <IngredientSelector
+            selected={selected}
+            onToggle={toggleIngredient}
+            onClear={clearIngredients}
+            onFind={() => setView('planner')}
+            returnToPlanner
           />
         ) : (
           <FavoritesView

@@ -14,7 +14,6 @@ import { RECIPES } from '@/data/recipes';
 import type { Recipe, RecipeWithMatch } from '@/types';
 import { useFavorites } from '@/context/FavoritesContext';
 import { MessageCircle } from 'lucide-react';
-import { NonVegToggle } from '@/components/NonVegToggle';
 import { MealPlannerView } from '@/components/MealPlannerView';
 
 type View = 'home' | 'favorites' | 'planner';
@@ -47,12 +46,6 @@ export default function App() {
   const [hasSearched, setHasSearched] = useState(false);
   const [activeRecipe, setActiveRecipe] = useState<RecipeWithMatch | null>(null);
   const [view, setView] = useState<View>('home');
-  const [showNonVeg, setShowNonVeg] = useLocalStorage<boolean>('ct_nonveg', false);
-
-  const visibleRecipes = useMemo(
-    () => (showNonVeg ? RECIPES : RECIPES.filter((r) => r.veg)),
-    [showNonVeg],
-  );
 
   // Chef Tara chat state
   const [taraOpen, setTaraOpen] = useState(false);
@@ -61,8 +54,8 @@ export default function App() {
   const resultsRef = useRef<HTMLDivElement>(null);
 
   const buckets = useMemo(
-    () => (hasSearched ? bucketMatches(visibleRecipes, selected) : { perfect: [], great: [], tryAlso: [], total: 0 }),
-    [hasSearched, selected, visibleRecipes],
+    () => (hasSearched ? bucketMatches(RECIPES, selected) : { perfect: [], great: [], tryAlso: [], total: 0 }),
+    [hasSearched, selected],
   );
 
   const toggleIngredient = useCallback((name: string) => {
@@ -93,11 +86,11 @@ export default function App() {
 
   const randomRecipe = useCallback(() => {
     // Pick from recipes that meet the 45% threshold; fall back to any if none qualify
-    const eligible = visibleRecipes.map((r) => computeMatch(r, selected)).filter((r): r is RecipeWithMatch => r !== null);
-    const pool = eligible.length > 0 ? eligible : visibleRecipes;
+    const eligible = RECIPES.map((r) => computeMatch(r, selected)).filter((r): r is RecipeWithMatch => r !== null);
+    const pool = eligible.length > 0 ? eligible : RECIPES;
     const pick = pool[Math.floor(Math.random() * pool.length)];
     openRecipe(pick);
-  }, [selected, visibleRecipes, openRecipe]);
+  }, [selected, openRecipe]);
 
   const cookAnother = useCallback(() => {
     setActiveRecipe(null);
@@ -116,14 +109,14 @@ export default function App() {
 
   const handleTaraRecipeClick = useCallback(
     (recipeId: string) => {
-      const recipe = visibleRecipes.find((r) => r.id === recipeId);
+      const recipe = RECIPES.find((r) => r.id === recipeId);
       if (!recipe) return;
       const matched = computeMatch(recipe, selected);
       if (!matched) return;
       setActiveRecipe(matched);
       pushRecent(recipe.id);
     },
-    [selected, visibleRecipes, pushRecent],
+    [selected, pushRecent],
   );
 
   const activeRecipeFavorite = activeRecipe ? isFavorite(activeRecipe.id) : false;
@@ -167,8 +160,6 @@ export default function App() {
                   onReset={clearIngredients}
                   onAskTara={(name) => askTara(name)}
                   onAddIngredients={() => document.getElementById('ingredients')?.scrollIntoView({ behavior: 'smooth' })}
-                  showNonVeg={showNonVeg}
-                  onToggleNonVeg={setShowNonVeg}
                 />
               )}
             </div>
@@ -181,7 +172,7 @@ export default function App() {
           />
         ) : (
           <FavoritesView
-            recipes={visibleRecipes}
+            recipes={RECIPES}
             favorites={favorites}
             recent={recent}
             isLoaded={isLoaded}

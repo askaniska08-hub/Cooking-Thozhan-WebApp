@@ -6,7 +6,6 @@ import { RecipeGrid, SectionHeader } from './RecipeGrid';
 import { RecipeCard } from './RecipeCard';
 import { EmptyState } from './EmptyState';
 import { RippleButton } from './ui/RippleButton';
-import { NonVegToggle } from './NonVegToggle';
 
 interface ResultsSectionProps {
   buckets: MatchBuckets;
@@ -16,11 +15,9 @@ interface ResultsSectionProps {
   onReset: () => void;
   onAskTara: (recipeName: string) => void;
   onAddIngredients: () => void;
-  showNonVeg: boolean;
-  onToggleNonVeg: (enabled: boolean) => void;
 }
 
-export function ResultsSection({ buckets, favorites, onView, onToggleFavorite, onReset, onAskTara, onAddIngredients, showNonVeg, onToggleNonVeg }: ResultsSectionProps) {
+export function ResultsSection({ buckets, favorites, onView, onToggleFavorite, onReset, onAskTara, onAddIngredients }: ResultsSectionProps) {
   if (buckets.total === 0) {
     return (
       <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
@@ -44,7 +41,6 @@ export function ResultsSection({ buckets, favorites, onView, onToggleFavorite, o
           <RippleButton onClick={onReset} className="btn-ghost px-4 py-2 text-sm">
             <RotateCcw size={15} /> Reset ingredients
           </RippleButton>
-          <NonVegToggle enabled={showNonVeg} onChange={onToggleNonVeg} />
         </div>
       </motion.div>
 

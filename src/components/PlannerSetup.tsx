@@ -1,8 +1,9 @@
 import { motion } from 'framer-motion';
-import { Sparkles, Users, Check, Leaf } from 'lucide-react';
+import { Sparkles, Check, Leaf } from 'lucide-react';
 import { cn } from '@/utils';
 import type { PlannerConfig, PlannerGoal, MealType } from '@/types';
 import { GOAL_META, DURATION_META, MEAL_META } from '@/services/mealPlanner';
+import { ServingsDropdown } from './ServingsDropdown';
 
 interface PlannerSetupProps {
   config: PlannerConfig;
@@ -122,19 +123,10 @@ export function PlannerSetup({ config, onChange, onGenerate, availableIngredient
       {/* Servings + Ingredients toggle */}
       <div className="grid gap-6 sm:grid-cols-2">
         <Section title="Number of Servings" emoji="👥">
-          <div className="flex items-center gap-3">
-            <Users size={20} className="text-primary" />
-            <select
-              value={config.servings}
-              onChange={(e) => onChange({ ...config, servings: Number(e.target.value) as 1 | 2 | 4 | 6 })}
-              className="w-full rounded-2xl border-2 border-gray-100 bg-white px-4 py-3 font-bold text-ink transition focus:border-primary dark:border-white/10 dark:bg-white/5 dark:text-white"
-            >
-              <option value={1}>1 serving</option>
-              <option value={2}>2 servings</option>
-              <option value={4}>4 servings</option>
-              <option value={6}>6 servings</option>
-            </select>
-          </div>
+          <ServingsDropdown
+            value={config.servings}
+            onChange={(v) => onChange({ ...config, servings: v })}
+          />
         </Section>
 
         <Section title="Use Available Ingredients" emoji="🥬">

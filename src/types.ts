@@ -1,5 +1,16 @@
 export type Difficulty = 'Easy' | 'Medium' | 'Hard';
 
+export type MealRole =
+  | 'main'
+  | 'gravy'
+  | 'side'
+  | 'chutney'
+  | 'rice'
+  | 'bread'
+  | 'snack'
+  | 'beverage'
+  | 'dessert';
+
 export type IngredientCategory =
   | 'Vegetables'
   | 'Herbs & Flavourings'
@@ -89,11 +100,19 @@ export interface PlannerConfig {
   useAvailableIngredients: boolean;
 }
 
-export interface PlannedMeal {
+export interface PlannedDish {
   recipe: Recipe;
+  role: MealRole;
   matchPercent: number;
   matched: string[];
   missing: string[];
+}
+
+export interface PlannedMeal {
+  dishes: PlannedDish[];
+  totalTime: number;
+  overallMatchPercent: number;
+  isComplete: boolean;
 }
 
 export interface PlannedDay {
@@ -118,12 +137,7 @@ export interface PlannerResult {
   extraIngredientsNeeded: number;
   unusedAvailableIngredients: string[];
   allUsedIngredients: string[];
+  incompleteMeals: number;
 }
 
-export interface PlannerRequestOptions {
-  goal?: PlannerGoal;
-  duration?: 1 | 3 | 5 | 7;
-  meals?: MealType[];
-  servings?: 1 | 2 | 4 | 6;
-  useAvailableIngredients?: boolean;
-}
+

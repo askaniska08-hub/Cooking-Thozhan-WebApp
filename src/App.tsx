@@ -14,7 +14,7 @@ import { RECIPES } from '@/data/recipes';
 import type { Recipe, RecipeWithMatch } from '@/types';
 import { useFavorites } from '@/context/FavoritesContext';
 import { MessageCircle } from 'lucide-react';
-import { MealPlannerView } from '@/components/MealPlannerView';
+import { MealPlannerView, createInitialPlannerState, type PlannerPersistedState } from '@/components/MealPlannerView';
 
 type View = 'home' | 'favorites' | 'planner' | 'select-ingredients';
 
@@ -46,6 +46,12 @@ export default function App() {
   const [hasSearched, setHasSearched] = useState(false);
   const [activeRecipe, setActiveRecipe] = useState<RecipeWithMatch | null>(null);
   const [view, setView] = useState<View>('home');
+
+  // Lifted planner state — survives view switches (e.g. going to ingredient selector and back)
+  const [plannerState, setPlannerState] = useState<PlannerPersistedState>(createInitialPlannerState);
+  const setPlannerStateUpdater = useCallback((updater: (prev: PlannerPersistedState) => PlannerPersistedState) => {
+    setPlannerState(updater);
+  }, []);
 
   // Chef Tara chat state
   const [taraOpen, setTaraOpen] = useState(false);
@@ -170,6 +176,8 @@ export default function App() {
             onViewRecipe={openRecipe}
             onBack={() => setView('home')}
             onSelectIngredients={() => setView('select-ingredients')}
+            state={plannerState}
+            setState={setPlannerStateUpdater}
           />
         ) : view === 'select-ingredients' ? (
           <IngredientSelector

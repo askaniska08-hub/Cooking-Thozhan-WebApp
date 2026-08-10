@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useCallback, useMemo, useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Sparkles, Loader2 } from 'lucide-react';
 import type { PlannerConfig, PlannerResult, RecipeWithMatch, MealType } from '@/types';
@@ -8,16 +8,7 @@ import { PlannerResults } from './PlannerResults';
 import { PlannerSummary } from './PlannerSummary';
 import { ShoppingList } from './ShoppingList';
 
-interface MealPlannerViewProps {
-  availableIngredients: string[];
-  onViewRecipe: (recipe: RecipeWithMatch) => void;
-  onBack: () => void;
-  onSelectIngredients: () => void;
-}
-
-type Phase = 'setup' | 'loading' | 'results';
-
-const DEFAULT_CONFIG: PlannerConfig = {
+export const DEFAULT_PLANNER_CONFIG: PlannerConfig = {
   goal: 'balanced',
   duration: 3,
   meals: ['Breakfast', 'Lunch', 'Dinner'],
@@ -29,47 +20,81 @@ const DEFAULT_CONFIG: PlannerConfig = {
   customExclusions: [],
 };
 
-export function MealPlannerView({ availableIngredients, onViewRecipe, onBack, onSelectIngredients }: MealPlannerViewProps) {
-  const [config, setConfig] = useState<PlannerConfig>(DEFAULT_CONFIG);
-  const [phase, setPhase] = useState<Phase>('setup');
-  const [result, setResult] = useState<PlannerResult | null>(null);
-  const [forceInclude, setForceInclude] = useState<string[]>([]);
+export type PlannerPhase = 'setup' | 'loading' | 'results';
+
+export interface PlannerPersistedState {
+  config: PlannerConfig;
+  phase: PlannerPhase;
+  result: PlannerResult | null;
+  forceInclude: string[];
+}
+
+export function createInitialPlannerState(): PlannerPersistedState {
+  return {
+    config: { ...DEFAULT_PLANNER_CONFIG },
+    phase: 'setup',
+    result: null,
+    forceInclude: [],
+  };
+}
+
+interface MealPlannerViewProps {
+  availableIngredients: string[];
+  onViewRecipe: (recipe: RecipeWithMatch) => void;
+  onBack: () => void;
+  onSelectIngredients: () => void;
+  state: PlannerPersistedState;
+  setState: (updater: (prev: PlannerPersistedState) => PlannerPersistedState) => void;
+}
+
+export function MealPlannerView({ availableIngredients, onViewRecipe, onBack, onSelectIngredients, state, setState }: MealPlannerViewProps) {
+  const { config, phase, result, forceInclude } = state;
+  const resultsRef = useRef<HTMLDivElement>(null);
+
+  const update = useCallback(
+    (patch: Partial<PlannerPersistedState>) => {
+      setState((prev) => ({ ...prev, ...patch }));
+    },
+    [setState],
+  );
+
+  // Scroll to results heading once they appear
+  useEffect(() => {
+    if (phase === 'results' && resultsRef.current) {
+      const timer = setTimeout(() => {
+        resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [phase]);
 
   const handleGenerate = useCallback(() => {
-    setPhase('loading');
+    update({ phase: 'loading' });
     const ingredients = config.useAvailableIngredients ? availableIngredients : [];
-    // Simulate AI processing for premium feel
     setTimeout(() => {
       const plan = generateMealPlan(config, ingredients, forceInclude);
-      setResult(plan);
-      setPhase('results');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      update({ phase: 'results', result: plan });
     }, 1600);
-  }, [config, availableIngredients, forceInclude]);
+  }, [config, availableIngredients, forceInclude, update]);
 
   const handleRegenerate = useCallback(() => {
-    // On regenerate, force-include any unused ingredients
-    if (result && result.unusedAvailableIngredients.length > 0) {
-      setForceInclude(result.unusedAvailableIngredients);
-    }
-    setPhase('loading');
+    const newForce = result && result.unusedAvailableIngredients.length > 0 ? result.unusedAvailableIngredients : forceInclude;
+    update({ phase: 'loading', forceInclude: newForce });
     const ingredients = config.useAvailableIngredients ? availableIngredients : [];
     setTimeout(() => {
-      const plan = generateMealPlan(config, ingredients, forceInclude);
-      setResult(plan);
-      setPhase('results');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      const plan = generateMealPlan(config, ingredients, newForce);
+      update({ phase: 'results', result: plan });
     }, 1400);
-  }, [config, availableIngredients, forceInclude, result]);
+  }, [config, availableIngredients, forceInclude, result, update]);
 
   const handleRegenerateMeal = useCallback(
     (dayIndex: number, mealType: MealType) => {
       if (!result) return;
       const ingredients = config.useAvailableIngredients ? availableIngredients : [];
       const newDays = regenerateSingleMeal(config, ingredients, dayIndex, mealType, result.days, forceInclude);
-      setResult({ ...result, days: newDays });
+      update({ result: { ...result, days: newDays } });
     },
-    [config, availableIngredients, result, forceInclude],
+    [config, availableIngredients, result, forceInclude, update],
   );
 
   const handleSwapDish = useCallback(
@@ -77,9 +102,9 @@ export function MealPlannerView({ availableIngredients, onViewRecipe, onBack, on
       if (!result) return;
       const ingredients = config.useAvailableIngredients ? availableIngredients : [];
       const newDays = swapDish(config, ingredients, dayIndex, mealType, dishIndex, result.days);
-      setResult({ ...result, days: newDays });
+      update({ result: { ...result, days: newDays } });
     },
-    [config, availableIngredients, result],
+    [config, availableIngredients, result, update],
   );
 
   const loadingMessages = useMemo(
@@ -112,7 +137,7 @@ export function MealPlannerView({ availableIngredients, onViewRecipe, onBack, on
           <motion.div key="setup" exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.2 }}>
             <PlannerSetup
               config={config}
-              onChange={setConfig}
+              onChange={(c) => update({ config: c })}
               onGenerate={handleGenerate}
               availableIngredientCount={availableIngredients.length}
               onSelectIngredients={onSelectIngredients}
@@ -134,9 +159,11 @@ export function MealPlannerView({ availableIngredients, onViewRecipe, onBack, on
 
         {phase === 'results' && result && (
           <motion.div key="results" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
-            {/* Summary at top */}
-            <div className="pt-6">
-              <PlannerSummary result={result} />
+            <div ref={resultsRef} className="scroll-mt-[140px]">
+              {/* Summary at top */}
+              <div className="pt-6">
+                <PlannerSummary result={result} />
+              </div>
             </div>
 
             {/* Day-by-day plan */}

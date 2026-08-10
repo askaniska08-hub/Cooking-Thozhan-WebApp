@@ -423,9 +423,13 @@ function buildCompleteMeal(
 
   const sorted = [...candidates].sort((a, b) => b.totalScore - a.totalScore);
 
-  // Pick primary dish from top candidates
-  const topN = Math.min(3, sorted.length);
-  const primary = sorted[Math.floor(Math.random() * topN)];
+  // Pick primary dish — must be a primary role (main/bread/rice/snack/dessert),
+  // never an accompaniment-only role (gravy/side/chutney/beverage) as sole dish.
+  const primaryCandidates = sorted.filter((c) => !ACCOMPANIMENT_ROLES.includes(c.role));
+  const primaryPool = primaryCandidates.length > 0 ? primaryCandidates : sorted;
+
+  const topN = Math.min(3, primaryPool.length);
+  const primary = primaryPool[Math.floor(Math.random() * topN)];
 
   const maxAcc = maxAccompaniments(primary.role, mealType);
 

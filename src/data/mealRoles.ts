@@ -84,8 +84,10 @@ export const COMPATIBLE_ACCOMPANIMENTS: Record<MealRole, MealRole[]> = {
 
 /**
  * Which roles need an accompaniment to form a complete meal.
+ * Includes accompaniment roles themselves — a gravy/side/chutney
+ * should NEVER be the sole dish; it needs a main to pair with.
  */
-export const NEEDS_ACCOMPANIMENT: MealRole[] = ['bread', 'rice'];
+export const NEEDS_ACCOMPANIMENT: MealRole[] = ['bread', 'rice', 'gravy', 'side', 'chutney'];
 
 /**
  * Which roles are considered complete standalone meals.
@@ -93,9 +95,14 @@ export const NEEDS_ACCOMPANIMENT: MealRole[] = ['bread', 'rice'];
 export const COMPLETE_STANDALONE: MealRole[] = ['main', 'snack', 'dessert', 'beverage'];
 
 /**
- * Which roles are considered accompaniments.
+ * Which roles are considered accompaniments (cannot be a sole dish).
  */
 export const ACCOMPANIMENT_ROLES: MealRole[] = ['gravy', 'side', 'chutney', 'beverage'];
+
+/**
+ * Roles that can serve as a primary / main dish for a meal.
+ */
+export const PRIMARY_ROLES: MealRole[] = ['main', 'bread', 'rice', 'snack', 'dessert'];
 
 /**
  * For lunch, rice dishes can have up to 2 accompaniments (gravy + side).

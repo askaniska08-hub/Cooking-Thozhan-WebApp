@@ -58,14 +58,16 @@ export function MealPlannerView({ availableIngredients, onViewRecipe, onBack, on
     [setState],
   );
 
-  // Scroll to results heading once they appear
+  // Scroll to results heading ONLY on loading→results transition (not on remount)
+  const prevPhase = useRef<PlannerPhase>(phase);
   useEffect(() => {
-    if (phase === 'results' && resultsRef.current) {
+    if (prevPhase.current !== 'results' && phase === 'results' && resultsRef.current) {
       const timer = setTimeout(() => {
         resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 100);
       return () => clearTimeout(timer);
     }
+    prevPhase.current = phase;
   }, [phase]);
 
   const handleGenerate = useCallback(() => {

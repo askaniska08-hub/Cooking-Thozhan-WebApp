@@ -92,12 +92,56 @@ export type PlannerGoal =
 
 export type MealType = 'Breakfast' | 'Lunch' | 'Dinner' | 'Snacks';
 
+export type DietType = 'veg' | 'vegan' | 'egg' | 'non-veg';
+
+export type NutritionPref =
+  | 'high-protein'
+  | 'high-fiber'
+  | 'more-vegetables'
+  | 'low-sugar'
+  | 'low-sodium'
+  | 'balanced-nutrition';
+
+export type AllergenExclusion =
+  | 'peanuts'
+  | 'dairy'
+  | 'gluten'
+  | 'soy'
+  | 'tree-nuts';
+
+export type RegenerateReason =
+  | 'more-pantry'
+  | 'more-protein'
+  | 'better-nutrition'
+  | 'less-shopping'
+  | 'less-time'
+  | 'more-variety'
+  | 'less-repetition';
+
+export type SwapReason =
+  | 'dislike'
+  | 'missing-ingredients'
+  | 'too-time-consuming'
+  | 'healthier'
+  | 'more-protein'
+  | 'more-variety';
+
 export interface PlannerConfig {
   goal: PlannerGoal;
   duration: 1 | 3 | 5 | 7;
   meals: MealType[];
   servings: 1 | 2 | 4 | 6;
   useAvailableIngredients: boolean;
+  dietType: DietType;
+  nutritionPrefs: NutritionPref[];
+  exclusions: AllergenExclusion[];
+  customExclusions: string[];
+}
+
+export interface MealExplanation {
+  reasons: string[];
+  pantryUsed: number;
+  additionalNeeded: number;
 }
 
 export interface PlannedDish {
@@ -106,6 +150,7 @@ export interface PlannedDish {
   matchPercent: number;
   matched: string[];
   missing: string[];
+  explanation?: MealExplanation;
 }
 
 export interface PlannedMeal {
@@ -113,6 +158,16 @@ export interface PlannedMeal {
   totalTime: number;
   overallMatchPercent: number;
   isComplete: boolean;
+  nutrition: MealNutrition;
+}
+
+export interface MealNutrition {
+  calories: number | null;
+  protein: number | null;
+  carbs: number | null;
+  fat: number | null;
+  fiber: number | null;
+  isEstimated: boolean;
 }
 
 export interface PlannedDay {
@@ -126,18 +181,28 @@ export interface ShoppingListItem {
   totalQuantity: string;
   recipeCount: number;
   isAvailable: boolean;
+  unit: string;
+}
+
+export interface WeeklySummary {
+  avgCaloriesPerDay: number | null;
+  avgProteinPerDay: number | null;
+  avgFiberPerDay: number | null;
+  pantryUtilizationPercent: number;
+  pantryUsedCount: number;
+  pantryTotalCount: number;
+  itemsToBuy: number;
+  avgCookingTime: number;
+  mealVarietyScore: number;
+  uniqueRecipes: number;
+  totalRecipes: number;
 }
 
 export interface PlannerResult {
   days: PlannedDay[];
   shoppingList: ShoppingListItem[];
-  wasteSavedPercent: number;
-  grocerySavingsRs: number;
-  ingredientsUtilizedPercent: number;
-  extraIngredientsNeeded: number;
+  weeklySummary: WeeklySummary;
   unusedAvailableIngredients: string[];
   allUsedIngredients: string[];
   incompleteMeals: number;
 }
-
-

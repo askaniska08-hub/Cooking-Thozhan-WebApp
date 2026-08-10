@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Recycle, IndianRupee, Sprout, ShoppingBasket } from 'lucide-react';
+import { Sprout, ShoppingBasket, Clock, Repeat, Flame, Wheat } from 'lucide-react';
 import type { PlannerResult } from '@/types';
 
 interface PlannerSummaryProps {
@@ -7,32 +7,34 @@ interface PlannerSummaryProps {
 }
 
 export function PlannerSummary({ result }: PlannerSummaryProps) {
-  const stats = [
+  const { weeklySummary: s } = result;
+
+  const stats: { label: string; value: string; icon: typeof Sprout; color: string; bgColor: string }[] = [
     {
-      label: 'Food Waste Saved',
-      value: `${result.wasteSavedPercent}%`,
-      icon: Recycle,
+      label: 'Pantry Utilization',
+      value: `${s.pantryUtilizationPercent}%`,
+      icon: Sprout,
       color: 'from-green-400 to-emerald-500',
       bgColor: 'bg-green-50 dark:bg-green-500/10',
     },
     {
-      label: 'Grocery Savings',
-      value: `₹${result.grocerySavingsRs}`,
-      icon: IndianRupee,
+      label: 'Items to Buy',
+      value: `${s.itemsToBuy}`,
+      icon: ShoppingBasket,
       color: 'from-orange-400 to-amber-500',
       bgColor: 'bg-orange-50 dark:bg-orange-500/10',
     },
     {
-      label: 'Ingredients Utilized',
-      value: `${result.ingredientsUtilizedPercent}%`,
-      icon: Sprout,
+      label: 'Avg Cook Time',
+      value: `~${s.avgCookingTime} min`,
+      icon: Clock,
       color: 'from-blue-400 to-cyan-500',
       bgColor: 'bg-blue-50 dark:bg-blue-500/10',
     },
     {
-      label: 'Extra to Buy',
-      value: `${result.extraIngredientsNeeded}`,
-      icon: ShoppingBasket,
+      label: 'Meal Variety',
+      value: `${s.uniqueRecipes} dishes`,
+      icon: Repeat,
       color: 'from-purple-400 to-pink-500',
       bgColor: 'bg-purple-50 dark:bg-purple-500/10',
     },
@@ -46,7 +48,7 @@ export function PlannerSummary({ result }: PlannerSummaryProps) {
     >
       <div className="glass-strong rounded-3xl p-5 shadow-card sm:p-6">
         <h3 className="mb-4 flex items-center gap-2 font-display text-lg font-extrabold text-ink dark:text-white">
-          <Recycle size={20} className="text-accent" /> Your Plan Impact
+          <Sprout size={20} className="text-accent" /> Your Weekly Plan
         </h3>
 
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -70,7 +72,29 @@ export function PlannerSummary({ result }: PlannerSummaryProps) {
           })}
         </div>
 
-        {/* Unused ingredients warning */}
+        {/* Nutrition averages */}
+        {(s.avgCaloriesPerDay !== null || s.avgProteinPerDay !== null || s.avgFiberPerDay !== null) && (
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-3 rounded-2xl bg-gray-50 p-3 dark:bg-white/5">
+            {s.avgCaloriesPerDay !== null && (
+              <span className="inline-flex items-center gap-1.5 text-sm font-bold text-ink dark:text-white">
+                <Flame size={15} className="text-orange-500" /> ~{s.avgCaloriesPerDay} kcal/day
+              </span>
+            )}
+            {s.avgProteinPerDay !== null && (
+              <span className="inline-flex items-center gap-1.5 text-sm font-bold text-ink dark:text-white">
+                <Sprout size={15} className="text-green-500" /> ~{s.avgProteinPerDay}g protein/day
+              </span>
+            )}
+            {s.avgFiberPerDay !== null && (
+              <span className="inline-flex items-center gap-1.5 text-sm font-bold text-ink dark:text-white">
+                <Wheat size={15} className="text-amber-500" /> ~{s.avgFiberPerDay}g fiber/day
+              </span>
+            )}
+            <span className="text-[10px] text-gray-400">Estimated nutrition</span>
+          </div>
+        )}
+
+        {/* Unused ingredients */}
         {result.unusedAvailableIngredients.length > 0 && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -79,11 +103,11 @@ export function PlannerSummary({ result }: PlannerSummaryProps) {
             className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-500/20 dark:bg-amber-500/10"
           >
             <p className="text-sm font-bold text-amber-700 dark:text-amber-400">
-              🥔 You still have: {result.unusedAvailableIngredients.slice(0, 6).join(', ')}
-              {result.unusedAvailableIngredients.length > 6 && ` +${result.unusedAvailableIngredients.length - 6} more`}
+              🥬 {result.unusedAvailableIngredients.length} ingredient{result.unusedAvailableIngredients.length === 1 ? '' : 's'} remain unused
             </p>
             <p className="mt-1 text-xs text-amber-600 dark:text-amber-400/80">
-              These ingredients weren't used. Try regenerating to include them!
+              {result.unusedAvailableIngredients.slice(0, 6).join(' • ')}
+              {result.unusedAvailableIngredients.length > 6 && ` +${result.unusedAvailableIngredients.length - 6} more`}
             </p>
           </motion.div>
         )}

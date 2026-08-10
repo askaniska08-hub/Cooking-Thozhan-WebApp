@@ -1,8 +1,8 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Sparkles, Loader2 } from 'lucide-react';
-import type { PlannerConfig, PlannerResult, RecipeWithMatch } from '@/types';
-import { generateMealPlan } from '@/services/mealPlanner';
+import type { PlannerConfig, PlannerResult, RecipeWithMatch, MealType } from '@/types';
+import { generateMealPlan, regenerateSingleMeal, swapDish } from '@/services/mealPlanner';
 import { PlannerSetup } from './PlannerSetup';
 import { PlannerResults } from './PlannerResults';
 import { PlannerSummary } from './PlannerSummary';
@@ -23,6 +23,10 @@ const DEFAULT_CONFIG: PlannerConfig = {
   meals: ['Breakfast', 'Lunch', 'Dinner'],
   servings: 2,
   useAvailableIngredients: true,
+  dietType: 'veg',
+  nutritionPrefs: [],
+  exclusions: [],
+  customExclusions: [],
 };
 
 export function MealPlannerView({ availableIngredients, onViewRecipe, onBack, onSelectIngredients }: MealPlannerViewProps) {
@@ -57,6 +61,26 @@ export function MealPlannerView({ availableIngredients, onViewRecipe, onBack, on
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }, 1400);
   }, [config, availableIngredients, forceInclude, result]);
+
+  const handleRegenerateMeal = useCallback(
+    (dayIndex: number, mealType: MealType) => {
+      if (!result) return;
+      const ingredients = config.useAvailableIngredients ? availableIngredients : [];
+      const newDays = regenerateSingleMeal(config, ingredients, dayIndex, mealType, result.days, forceInclude);
+      setResult({ ...result, days: newDays });
+    },
+    [config, availableIngredients, result, forceInclude],
+  );
+
+  const handleSwapDish = useCallback(
+    (dayIndex: number, mealType: MealType, dishIndex: number) => {
+      if (!result) return;
+      const ingredients = config.useAvailableIngredients ? availableIngredients : [];
+      const newDays = swapDish(config, ingredients, dayIndex, mealType, dishIndex, result.days);
+      setResult({ ...result, days: newDays });
+    },
+    [config, availableIngredients, result],
+  );
 
   const loadingMessages = useMemo(
     () => [
@@ -120,6 +144,9 @@ export function MealPlannerView({ availableIngredients, onViewRecipe, onBack, on
               days={result.days}
               onViewRecipe={onViewRecipe}
               onRegenerate={handleRegenerate}
+              onRegenerateMeal={handleRegenerateMeal}
+              onSwapDish={handleSwapDish}
+              config={config}
             />
 
             {/* Shopping list */}

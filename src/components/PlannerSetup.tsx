@@ -1,8 +1,15 @@
 import { motion } from 'framer-motion';
 import { Sparkles, Check, Leaf, ShoppingBasket, AlertCircle } from 'lucide-react';
 import { cn } from '@/utils';
-import type { PlannerConfig, PlannerGoal, MealType } from '@/types';
-import { GOAL_META, DURATION_META, MEAL_META } from '@/services/mealPlanner';
+import type { PlannerConfig, PlannerGoal, MealType, DietType, NutritionPref, AllergenExclusion } from '@/types';
+import {
+  GOAL_META,
+  DURATION_META,
+  MEAL_META,
+  DIET_META,
+  NUTRITION_PREF_META,
+  ALLERGEN_META,
+} from '@/services/mealPlanner';
 import { ServingsDropdown } from './ServingsDropdown';
 
 interface PlannerSetupProps {
@@ -13,12 +20,45 @@ interface PlannerSetupProps {
   onSelectIngredients: () => void;
 }
 
-export function PlannerSetup({ config, onChange, onGenerate, availableIngredientCount, onSelectIngredients }: PlannerSetupProps) {
+export function PlannerSetup({ config: rawConfig, onChange, onGenerate, availableIngredientCount, onSelectIngredients }: PlannerSetupProps) {
+  // Defensive defaults: never crash if a partial/legacy config is passed
+  const config: PlannerConfig = {
+    goal: rawConfig.goal ?? 'balanced',
+    duration: rawConfig.duration ?? 3,
+    meals: rawConfig.meals ?? ['Breakfast', 'Lunch', 'Dinner'],
+    servings: rawConfig.servings ?? 2,
+    useAvailableIngredients: rawConfig.useAvailableIngredients ?? true,
+    dietType: rawConfig.dietType ?? 'veg',
+    nutritionPrefs: rawConfig.nutritionPrefs ?? [],
+    exclusions: rawConfig.exclusions ?? [],
+    customExclusions: rawConfig.customExclusions ?? [],
+  };
+
   const toggleMeal = (meal: MealType) => {
     const has = config.meals.includes(meal);
     onChange({
       ...config,
       meals: has ? config.meals.filter((m) => m !== meal) : [...config.meals, meal],
+    });
+  };
+
+  const toggleNutritionPref = (pref: NutritionPref) => {
+    const has = config.nutritionPrefs.includes(pref);
+    onChange({
+      ...config,
+      nutritionPrefs: has
+        ? config.nutritionPrefs.filter((p) => p !== pref)
+        : [...config.nutritionPrefs, pref],
+    });
+  };
+
+  const toggleExclusion = (allergen: AllergenExclusion) => {
+    const has = config.exclusions.includes(allergen);
+    onChange({
+      ...config,
+      exclusions: has
+        ? config.exclusions.filter((a) => a !== allergen)
+        : [...config.exclusions, allergen],
     });
   };
 
@@ -196,6 +236,84 @@ export function PlannerSetup({ config, onChange, onGenerate, availableIngredient
           )}
         </Section>
       </div>
+
+      {/* Dietary Preference */}
+      <Section title="Dietary Preference" emoji="🥗">
+        <div className="flex flex-wrap gap-3">
+          {DIET_META.map((d) => {
+            const active = config.dietType === d.value;
+            return (
+              <button
+                key={d.value}
+                onClick={() => onChange({ ...config, dietType: d.value as DietType })}
+                className={cn(
+                  'flex items-center gap-2 rounded-2xl border-2 px-5 py-3 font-bold transition-all',
+                  active
+                    ? 'border-accent bg-accent/5 text-accent shadow-glow-accent'
+                    : 'border-gray-100 bg-white text-gray-400 hover:border-accent/30 dark:border-white/10 dark:bg-white/5',
+                )}
+              >
+                <span className="text-xl">{d.emoji}</span> {d.label}
+                {active && <Check size={16} />}
+              </button>
+            );
+          })}
+        </div>
+      </Section>
+
+      {/* Allergies / Exclusions */}
+      <Section title="Allergies & Exclusions" emoji="⚠️">
+        <p className="mb-3 text-xs text-gray-500 dark:text-gray-400">
+          Recipes containing these will be completely excluded from your plan.
+        </p>
+        <div className="flex flex-wrap gap-3">
+          {ALLERGEN_META.map((a) => {
+            const active = config.exclusions.includes(a.value);
+            return (
+              <button
+                key={a.value}
+                onClick={() => toggleExclusion(a.value)}
+                className={cn(
+                  'flex items-center gap-2 rounded-2xl border-2 px-4 py-2.5 text-sm font-bold transition-all',
+                  active
+                    ? 'border-red-400 bg-red-50 text-red-600 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-400'
+                    : 'border-gray-100 bg-white text-gray-400 hover:border-red-200 dark:border-white/10 dark:bg-white/5',
+                )}
+              >
+                <span className="text-lg">{a.emoji}</span> {a.label}
+                {active && <Check size={14} />}
+              </button>
+            );
+          })}
+        </div>
+      </Section>
+
+      {/* Nutrition Preferences */}
+      <Section title="Nutrition Priorities" emoji="📊">
+        <p className="mb-3 text-xs text-gray-500 dark:text-gray-400">
+          Select one or more priorities to influence meal ranking.
+        </p>
+        <div className="flex flex-wrap gap-3">
+          {NUTRITION_PREF_META.map((np) => {
+            const active = config.nutritionPrefs.includes(np.value);
+            return (
+              <button
+                key={np.value}
+                onClick={() => toggleNutritionPref(np.value)}
+                className={cn(
+                  'flex items-center gap-2 rounded-2xl border-2 px-4 py-2.5 text-sm font-bold transition-all',
+                  active
+                    ? 'border-primary bg-primary/5 text-primary shadow-glow'
+                    : 'border-gray-100 bg-white text-gray-400 hover:border-primary/30 dark:border-white/10 dark:bg-white/5',
+                )}
+              >
+                <span className="text-lg">{np.emoji}</span> {np.label}
+                {active && <Check size={14} />}
+              </button>
+            );
+          })}
+        </div>
+      </Section>
 
       {/* Generate button */}
       <div className="mt-8 flex justify-center">

@@ -52,7 +52,6 @@ export function MealPlannerView({ availableIngredients, onViewRecipe, onBack, on
   const { config, phase, result, forceInclude } = state;
   const mealPlanResultsRef = useRef<HTMLDivElement>(null);
   const plannerTopRef = useRef<HTMLDivElement>(null);
-  const prevPhase = useRef<PlannerPhase>(phase);
   // Track whether this is a full-plan generation (not a single swap)
   const isFullGeneration = useRef(false);
 
@@ -63,36 +62,37 @@ export function MealPlannerView({ availableIngredients, onViewRecipe, onBack, on
     [setState],
   );
 
-  // Scroll to top immediately when generation starts (loading phase).
-  // Also scroll to results when they appear after a full generation.
-  // Both use window.scrollTo directly — the app uses document-level scrolling.
+  // 1. Instant scroll-to-top before paint when entering loading phase.
   useLayoutEffect(() => {
-    // A) On entering loading: instant scroll to planner top
     if (phase === 'loading') {
       window.scrollTo({ top: 0, behavior: 'auto' });
     }
+  }, [phase]);
 
-    // B) On loading→results transition from full generation: scroll to results
-    if (prevPhase.current === 'loading' && phase === 'results' && isFullGeneration.current) {
-      let raf1: number;
-      let raf2: number;
-      raf1 = requestAnimationFrame(() => {
-        raf2 = requestAnimationFrame(() => {
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-          isFullGeneration.current = false;
-        });
+  // 2. Re-assert scroll after paint to counter layout shifts from AnimatePresence exit animations.
+  useEffect(() => {
+    if (phase !== 'loading') return;
+    window.scrollTo({ top: 0, behavior: 'auto' });
+    const timeout = setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'auto' });
+    }, 300);
+    return () => clearTimeout(timeout);
+  }, [phase]);
+
+  // 3. Scroll to top when results appear after a full generation.
+  useLayoutEffect(() => {
+    if (phase === 'results' && isFullGeneration.current) {
+      const raf = requestAnimationFrame(() => {
+        window.scrollTo({ top: 0, behavior: 'auto' });
       });
-      return () => {
-        cancelAnimationFrame(raf1);
-        cancelAnimationFrame(raf2);
-      };
+      isFullGeneration.current = false;
+      return () => cancelAnimationFrame(raf);
     }
-
-    prevPhase.current = phase;
   }, [phase]);
 
   const handleGenerate = useCallback(() => {
     isFullGeneration.current = true;
+    window.scrollTo({ top: 0, behavior: 'auto' });
     update({ phase: 'loading' });
     const ingredients = config.useAvailableIngredients ? availableIngredients : [];
     setTimeout(() => {
@@ -103,6 +103,7 @@ export function MealPlannerView({ availableIngredients, onViewRecipe, onBack, on
 
   const handleRegenerate = useCallback(() => {
     isFullGeneration.current = true;
+    window.scrollTo({ top: 0, behavior: 'auto' });
     const newForce = result && result.unusedAvailableIngredients.length > 0 ? result.unusedAvailableIngredients : forceInclude;
     update({ phase: 'loading', forceInclude: newForce });
     const ingredients = config.useAvailableIngredients ? availableIngredients : [];

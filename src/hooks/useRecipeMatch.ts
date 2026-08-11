@@ -12,14 +12,7 @@ function computeStars(match: number): number {
 }
 
 export function computeMatch(recipe: Recipe, selected: string[]): RecipeWithMatch | null {
-  const status = getIngredientStatus(recipe.ingredients, selected);
-
-  // All "must" ingredients must be available (selected or pantry)
-  const mustOk = recipe.must.every((m) => {
-    const norm = normalizeIngredient(m);
-    return status.availableIngredients.some((a) => normalizeIngredient(a) === norm);
-  });
-  if (!mustOk) return null;
+  const status = getIngredientStatus(recipe.ingredients, selected, recipe.must);
 
   // Below threshold — treat as non-existent
   if (status.matchPercentage < MIN_MATCH_THRESHOLD) return null;

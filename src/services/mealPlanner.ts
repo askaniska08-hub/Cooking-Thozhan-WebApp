@@ -107,6 +107,8 @@ const NUTRITION_PER_CATEGORY: Record<string, { calories: number; protein: number
 
 const PROTEIN_RICH_INGREDIENTS = new Set(['Egg', 'Toor Dal (Thuvaram Paruppu)', 'Bengal Gram (Kadalai Paruppu)', 'Moong Dal (Paasi Paruppu)', 'Paneer', 'Chicken', 'Rajma'].map(normalizeIngredient));
 
+const CARB_INGREDIENTS = new Set(['Rice', 'Wheat Flour', 'Rava', 'Bread', 'Poha', 'Vermicelli', 'Pasta', 'Noodles', 'Besan', 'Maida', 'Rice Flour', 'Batter'].map(normalizeIngredient));
+
 function estimateNutrition(recipe: Recipe): MealNutrition {
   const base = NUTRITION_PER_CATEGORY[recipe.category] ?? { calories: 250, protein: 7, carbs: 30, fat: 10, fiber: 3 };
   const proteinBoost = recipe.ingredients.some((i) => PROTEIN_RICH_INGREDIENTS.has(normalizeIngredient(i))) ? 5 : 0;
@@ -195,6 +197,8 @@ function scoreRecipe(
   goal: PlannerConfig['goal'],
   nutritionPrefs: NutritionPref[],
   usedRecipeIds: Set<string>,
+  cuisineUsed: Map<string, number>,
+  carbUsed: Map<string, number>,
 ): ScoredRecipe | null {
   const status = getIngredientStatus(recipe.ingredients, available);
   if (status.matchPercentage < MIN_MATCH_THRESHOLD) return null;
@@ -215,10 +219,29 @@ function scoreRecipe(
     nutritionBonus += NUTRITION_PREF_BONUS[np](recipe);
   }
 
-  // Weekly variety: penalize recipes already used in the plan
+  // Weekly variety: heavily penalize recipes already used in the plan
   let varietyPenalty = 0;
   if (usedRecipeIds.has(recipe.id)) {
-    varietyPenalty = -20;
+    varietyPenalty = -35;
+  }
+
+  // Penalize cuisine repetition (same recipe category used multiple times)
+  const cat = recipe.category;
+  const cuisineCount = cuisineUsed.get(cat) ?? 0;
+  if (cuisineCount > 0) {
+    varietyPenalty -= Math.min(15, cuisineCount * 5);
+  }
+
+  // Penalize major carb repetition (rice every meal, bread every meal, etc.)
+  for (const ing of recipe.ingredients) {
+    const norm = normalizeIngredient(ing);
+    if (CARB_INGREDIENTS.has(norm)) {
+      const carbCount = carbUsed.get(norm) ?? 0;
+      if (carbCount > 0) {
+        varietyPenalty -= Math.min(12, carbCount * 4);
+      }
+      break; // only count the first carb ingredient per recipe
+    }
   }
 
   const totalScore = status.matchPercentage + reuseBonus + goalBonus + nutritionBonus + varietyPenalty;
@@ -371,6 +394,8 @@ function buildCompleteMeal(
   forceInclude: string[],
   goal: PlannerConfig['goal'],
   nutritionPrefs: NutritionPref[],
+  cuisineUsed: Map<string, number>,
+  carbUsed: Map<string, number>,
   regenerateReason?: RegenerateReason,
 ): MealCombination | null {
   let candidates = filterByMealType(recipePool, mealType);
@@ -607,6 +632,7 @@ export function generateMealPlan(
   const usedIngredients = new Set<string>();
   const usedRecipeIds = new Set<string>();
   const cuisineUsed = new Map<string, number>(); // track cuisine repetition
+  const carbUsed = new Map<string, number>(); // track major carb repetition
 
   const goalFilter = GOAL_FILTERS[config.goal];
 
@@ -629,7 +655,7 @@ export function generateMealPlan(
 
     for (const mealType of mealTypes) {
       const currentPool: ScoredRecipe[] = eligibleRecipes
-        .map((r) => scoreRecipe(r, availableIngredients, usedIngredients, config.goal, config.nutritionPrefs, usedRecipeIds))
+        .map((r) => scoreRecipe(r, availableIngredients, usedIngredients, config.goal, config.nutritionPrefs, usedRecipeIds, cuisineUsed, carbUsed))
         .filter((s): s is ScoredRecipe => s !== null);
 
       const combo = buildCompleteMeal(
@@ -639,6 +665,8 @@ export function generateMealPlan(
         forceInclude,
         config.goal,
         config.nutritionPrefs,
+        cuisineUsed,
+        carbUsed,
         regenerateReason,
       );
 
@@ -672,6 +700,11 @@ export function generateMealPlan(
           usedRecipeIds.add(dish.recipe.id);
           for (const ing of dish.recipe.ingredients) {
             usedIngredients.add(ing);
+            // Track major carb repetition
+            const norm = normalizeIngredient(ing);
+            if (CARB_INGREDIENTS.has(norm)) {
+              carbUsed.set(norm, (carbUsed.get(norm) ?? 0) + 1);
+            }
           }
           // Track cuisine repetition
           const cat = dish.recipe.category;
@@ -818,6 +851,8 @@ export function regenerateSingleMeal(
 
   const usedRecipeIds = new Set<string>();
   const usedIngredients = new Set<string>();
+  const cuisineUsed = new Map<string, number>();
+  const carbUsed = new Map<string, number>();
 
   for (let d = 0; d < currentDays.length; d++) {
     for (const mt of config.meals) {
@@ -828,7 +863,12 @@ export function regenerateSingleMeal(
         usedRecipeIds.add(dish.recipe.id);
         for (const ing of dish.recipe.ingredients) {
           usedIngredients.add(ing);
+          const norm = normalizeIngredient(ing);
+          if (CARB_INGREDIENTS.has(norm)) {
+            carbUsed.set(norm, (carbUsed.get(norm) ?? 0) + 1);
+          }
         }
+        cuisineUsed.set(dish.recipe.category, (cuisineUsed.get(dish.recipe.category) ?? 0) + 1);
       }
     }
   }
@@ -840,10 +880,10 @@ export function regenerateSingleMeal(
   });
 
   const recipePool: ScoredRecipe[] = eligibleRecipes
-    .map((r) => scoreRecipe(r, availableIngredients, usedIngredients, config.goal, config.nutritionPrefs, usedRecipeIds))
+    .map((r) => scoreRecipe(r, availableIngredients, usedIngredients, config.goal, config.nutritionPrefs, usedRecipeIds, cuisineUsed, carbUsed))
     .filter((s): s is ScoredRecipe => s !== null);
 
-  const combo = buildCompleteMeal(mealType, recipePool, usedRecipeIds, forceInclude, config.goal, config.nutritionPrefs, regenerateReason);
+  const combo = buildCompleteMeal(mealType, recipePool, usedRecipeIds, forceInclude, config.goal, config.nutritionPrefs, cuisineUsed, carbUsed, regenerateReason);
 
   const newDays = [...currentDays];
   const day = { ...newDays[dayIndex] };
@@ -896,6 +936,8 @@ export function swapDish(
 
   const usedRecipeIds = new Set<string>();
   const usedIngredients = new Set<string>();
+  const cuisineUsed = new Map<string, number>();
+  const carbUsed = new Map<string, number>();
 
   for (let d = 0; d < currentDays.length; d++) {
     for (const mt of config.meals) {
@@ -906,7 +948,12 @@ export function swapDish(
         usedRecipeIds.add(dish.recipe.id);
         for (const ing of dish.recipe.ingredients) {
           usedIngredients.add(ing);
+          const norm = normalizeIngredient(ing);
+          if (CARB_INGREDIENTS.has(norm)) {
+            carbUsed.set(norm, (carbUsed.get(norm) ?? 0) + 1);
+          }
         }
+        cuisineUsed.set(dish.recipe.category, (cuisineUsed.get(dish.recipe.category) ?? 0) + 1);
       }
     }
   }
@@ -919,7 +966,7 @@ export function swapDish(
   });
 
   const pool: ScoredRecipe[] = eligibleRecipes
-    .map((r) => scoreRecipe(r, availableIngredients, usedIngredients, config.goal, config.nutritionPrefs, usedRecipeIds))
+    .map((r) => scoreRecipe(r, availableIngredients, usedIngredients, config.goal, config.nutritionPrefs, usedRecipeIds, cuisineUsed, carbUsed))
     .filter((s): s is ScoredRecipe => s !== null)
     .filter((s) => !usedRecipeIds.has(s.recipe.id));
 

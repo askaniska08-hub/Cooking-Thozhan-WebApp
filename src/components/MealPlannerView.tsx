@@ -51,6 +51,7 @@ interface MealPlannerViewProps {
 export function MealPlannerView({ availableIngredients, onViewRecipe, onBack, onSelectIngredients, state, setState }: MealPlannerViewProps) {
   const { config, phase, result, forceInclude } = state;
   const resultsRef = useRef<HTMLDivElement>(null);
+  const plannerTopRef = useRef<HTMLDivElement>(null);
 
   const update = useCallback(
     (patch: Partial<PlannerPersistedState>) => {
@@ -69,6 +70,14 @@ export function MealPlannerView({ availableIngredients, onViewRecipe, onBack, on
       return () => clearTimeout(timer);
     }
     prevPhase.current = phase;
+  }, [phase]);
+
+  // When entering loading, immediately scroll to the planner top so the
+  // viewport never drifts down to the footer / Meet the Creator section
+  useEffect(() => {
+    if (phase === 'loading' && plannerTopRef.current) {
+      plannerTopRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   }, [phase]);
 
   const handleGenerate = useCallback(() => {
@@ -121,7 +130,7 @@ export function MealPlannerView({ availableIngredients, onViewRecipe, onBack, on
   );
 
   return (
-    <div className="min-h-screen pb-12">
+    <div ref={plannerTopRef} className="min-h-screen pb-12">
       {/* Top bar */}
       <div className="sticky top-[64px] z-30 glass-strong border-b border-black/5 dark:border-white/5">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">

@@ -1,4 +1,5 @@
 import { INGREDIENTS, PANTRY_STAPLES, INGREDIENT_ALIASES } from '@/data/ingredients';
+import type { IngredientCategory } from '@/types';
 
 /**
  * Normalize an ingredient name for reliable comparison.
@@ -81,6 +82,8 @@ export interface IngredientStatus {
   matchedCount: number;
   totalIngredients: number;
   matchPercentage: number;
+  /** Core (must-have) ingredients that are missing — drives heavy penalty */
+  missingCore: string[];
 }
 
 /**
@@ -101,21 +104,38 @@ export interface IngredientStatus {
  * Returns de-duplicated lists (recipe order preserved), counts, and a
  * match percentage rounded to the nearest whole number.
  */
+const SEASONING_CATEGORIES = new Set<IngredientCategory>(['Herbs & Flavourings']);
+
+const INGREDIENT_CATEGORY_MAP = new Map<string, IngredientCategory>();
+for (const ing of INGREDIENTS) {
+  INGREDIENT_CATEGORY_MAP.set(normalizeIngredient(ing.name), ing.category);
+}
+
+function isSeasoning(ingredient: string): boolean {
+  const cat = INGREDIENT_CATEGORY_MAP.get(normalizeIngredient(ingredient));
+  return cat !== undefined && SEASONING_CATEGORIES.has(cat);
+}
+
 export function getIngredientStatus(
   recipeIngredients: string[],
   selected: string[],
+  must: string[] = [],
 ): IngredientStatus {
   const selectedSet = new Set(selected.map(normalizeIngredient));
+  const mustSet = new Set(must.map(normalizeIngredient));
 
   const seen = new Set<string>();
   const availableIngredients: string[] = [];
   const pantryIngredients: string[] = [];
   const missingIngredients: string[] = [];
+  const missingCore: string[] = [];
 
   for (const ing of recipeIngredients) {
     const norm = normalizeIngredient(ing);
     if (seen.has(norm)) continue;
     seen.add(norm);
+
+    const isCore = mustSet.has(norm);
 
     if (selectedSet.has(norm)) {
       availableIngredients.push(ing);
@@ -123,14 +143,31 @@ export function getIngredientStatus(
       pantryIngredients.push(ing);
     } else {
       missingIngredients.push(ing);
+      if (isCore) missingCore.push(ing);
     }
   }
 
   const matchedCount = availableIngredients.length + pantryIngredients.length;
   const totalIngredients = matchedCount + missingIngredients.length;
-  const matchPercentage = totalIngredients === 0
+
+  // Weighted scoring: core ingredients carry 3x weight, seasonings 0.5x, optional 1x
+  let totalWeight = 0;
+  let matchedWeight = 0;
+  for (const ing of recipeIngredients) {
+    const norm = normalizeIngredient(ing);
+    const isCore = mustSet.has(norm);
+    const isSeasoningIng = isSeasoning(ing);
+    const weight = isCore ? 3 : isSeasoningIng ? 0.5 : 1;
+
+    totalWeight += weight;
+    if (selectedSet.has(norm) || PANTRY_ALL.has(norm)) {
+      matchedWeight += weight;
+    }
+  }
+
+  const matchPercentage = totalWeight === 0
     ? 0
-    : Math.round((matchedCount / totalIngredients) * 100);
+    : Math.round((matchedWeight / totalWeight) * 100);
 
   return {
     availableIngredients,
@@ -139,6 +176,7 @@ export function getIngredientStatus(
     matchedCount,
     totalIngredients,
     matchPercentage,
+    missingCore,
   };
 }
 

@@ -50,7 +50,7 @@ interface MealPlannerViewProps {
 
 export function MealPlannerView({ availableIngredients, onViewRecipe, onBack, onSelectIngredients, state, setState }: MealPlannerViewProps) {
   const { config, phase, result, forceInclude } = state;
-  const resultsRef = useRef<HTMLDivElement>(null);
+  const mealPlanResultsRef = useRef<HTMLDivElement>(null);
   const plannerTopRef = useRef<HTMLDivElement>(null);
   const prevPhase = useRef<PlannerPhase>(phase);
   // Track whether this is a full-plan generation (not a single swap)
@@ -63,16 +63,26 @@ export function MealPlannerView({ availableIngredients, onViewRecipe, onBack, on
     [setState],
   );
 
-  // Scroll to results heading ONLY on loading→results transition from a full generation.
-  // Uses useLayoutEffect + requestAnimationFrame so the scroll fires after the results
-  // DOM has been painted but before the user sees the frame — no footer flash.
+  // Scroll to Meal Planner results ONLY on loading→results transition from a full generation.
+  // Uses double-RAF so the results DOM is fully painted before scrolling.
+  // This scroll is completely contained within the Meal Planner — it targets
+  // mealPlanResultsRef which is only rendered inside the planner view, and
+  // never touches TARA/chat state, scroll, or focus.
   useLayoutEffect(() => {
-    if (prevPhase.current === 'loading' && phase === 'results' && isFullGeneration.current && resultsRef.current) {
-      const raf = requestAnimationFrame(() => {
-        resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        isFullGeneration.current = false;
+    if (prevPhase.current === 'loading' && phase === 'results' && isFullGeneration.current && mealPlanResultsRef.current) {
+      // Double-RAF: first frame commits the DOM, second frame ensures layout is stable
+      let raf1: number;
+      let raf2: number;
+      raf1 = requestAnimationFrame(() => {
+        raf2 = requestAnimationFrame(() => {
+          mealPlanResultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          isFullGeneration.current = false;
+        });
       });
-      return () => cancelAnimationFrame(raf);
+      return () => {
+        cancelAnimationFrame(raf1);
+        cancelAnimationFrame(raf2);
+      };
     }
     prevPhase.current = phase;
   }, [phase]);
@@ -182,7 +192,7 @@ export function MealPlannerView({ availableIngredients, onViewRecipe, onBack, on
 
         {phase === 'results' && result && (
           <motion.div key="results" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
-            <div ref={resultsRef} className="scroll-mt-[140px] min-h-[60vh]">
+            <div ref={mealPlanResultsRef} className="scroll-mt-[140px] min-h-[60vh]">
               {/* Summary at top */}
               <div className="pt-6">
                 <PlannerSummary result={result} />

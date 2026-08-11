@@ -9,7 +9,8 @@ export type MealRole =
   | 'bread'
   | 'snack'
   | 'beverage'
-  | 'dessert';
+  | 'dessert'
+  | 'soup';
 
 export type IngredientCategory =
   | 'Vegetables'

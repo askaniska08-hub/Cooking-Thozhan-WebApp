@@ -45,10 +45,10 @@ export function getMealRole(recipe: Recipe): MealRole {
   if (category === 'Beverages') return 'beverage';
   if (category === 'Salads') return 'side';
 
-  // Soups — pepper-rasam is a gravy-like side
+  // Soups — pepper-rasam is a gravy-like side, all others are standalone light meals
   if (category === 'Soups') {
     if (id === 'pepper-rasam') return 'gravy';
-    return 'side';
+    return 'soup';
   }
 
   // Bread recipes — split
@@ -80,6 +80,7 @@ export const COMPATIBLE_ACCOMPANIMENTS: Record<MealRole, MealRole[]> = {
   snack: ['beverage'],
   beverage: ['snack', 'dessert'],
   dessert: ['beverage'],
+  soup: [], // soup is a standalone light meal, no accompaniments
 };
 
 /**
@@ -87,22 +88,22 @@ export const COMPATIBLE_ACCOMPANIMENTS: Record<MealRole, MealRole[]> = {
  * Includes accompaniment roles themselves — a gravy/side/chutney
  * should NEVER be the sole dish; it needs a main to pair with.
  */
-export const NEEDS_ACCOMPANIMENT: MealRole[] = ['bread', 'rice', 'gravy', 'side', 'chutney'];
+export const NEEDS_ACCOMPANIMENT: MealRole[] = ['bread', 'rice', 'gravy', 'side', 'chutney']; // soup NOT included — it's standalone
 
 /**
  * Which roles are considered complete standalone meals.
  */
-export const COMPLETE_STANDALONE: MealRole[] = ['main', 'snack', 'dessert', 'beverage'];
+export const COMPLETE_STANDALONE: MealRole[] = ['main', 'snack', 'dessert', 'beverage', 'soup'];
 
 /**
  * Which roles are considered accompaniments (cannot be a sole dish).
  */
-export const ACCOMPANIMENT_ROLES: MealRole[] = ['gravy', 'side', 'chutney', 'beverage'];
+export const ACCOMPANIMENT_ROLES: MealRole[] = ['gravy', 'side', 'chutney', 'beverage']; // soup NOT included — it's a primary role
 
 /**
  * Roles that can serve as a primary / main dish for a meal.
  */
-export const PRIMARY_ROLES: MealRole[] = ['main', 'bread', 'rice', 'snack', 'dessert'];
+export const PRIMARY_ROLES: MealRole[] = ['main', 'bread', 'rice', 'snack', 'dessert', 'soup'];
 
 /**
  * For lunch, rice dishes can have up to 2 accompaniments (gravy + side).
@@ -255,11 +256,7 @@ const ACCOMP_GROUP_MAP: Record<string, AccompGroup> = {
   'semiya-payasam': 'dessert', 'carrot-halwa': 'dessert', 'coconut-burfi': 'dessert',
   'coconut-ladoo': 'dessert', 'peanut-burfi': 'dessert', 'rava-ladoo': 'dessert',
   'gulab-jamun': 'dessert', 'bread-halwa': 'dessert',
-  // Soups (treated as side for pairing)
-  'carrot-soup': 'side', 'corn-vegetable-soup': 'side', 'mushroom-soup': 'side',
-  'pumpkin-soup': 'side', 'spinach-soup': 'side', 'sweet-corn-soup': 'side',
-  'tomato-soup': 'side', 'vegetable-soup': 'side', 'egg-soup': 'side',
-  'egg-noodle-soup': 'side',
+  // Soups removed from accompaniment map — they are standalone light meals, not sides
 };
 
 function getMainGroup(recipe: Recipe): MainGroup {
@@ -334,6 +331,11 @@ export function areCompatible(recipe1: Recipe, recipe2: Recipe): boolean {
   // Don't pair tea/coffee with gravies — that's nonsensical
   if ((role1 === 'beverage' && role2 === 'gravy') || (role2 === 'beverage' && role1 === 'gravy')) return false;
   if ((role1 === 'beverage' && role2 === 'chutney') || (role2 === 'beverage' && role1 === 'chutney')) return false;
+
+  // Soup is a standalone light meal — never an accompaniment to anything.
+  // If either dish is soup, the other must NOT be a main/bread/rice/gravy/side/chutney.
+  // This prevents: Rice + Soup, Dosa + Soup, Poori + Soup, Chapati + Soup, etc.
+  if (role1 === 'soup' || role2 === 'soup') return false;
   if ((role1 === 'dessert' && role2 === 'gravy') || (role2 === 'dessert' && role1 === 'gravy')) return false;
 
   // ─── Cultural pairing enforcement ───
@@ -411,6 +413,7 @@ export function roleLabel(role: MealRole): string {
     snack: 'Snack',
     beverage: 'Beverage',
     dessert: 'Dessert',
+    soup: 'Soup',
   };
   return labels[role];
 }

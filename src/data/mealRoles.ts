@@ -236,7 +236,7 @@ const ACCOMP_GROUP_MAP: Record<string, AccompGroup> = {
   'green-peas-stir-fry': 'side', 'egg-pepper-fry': 'side', 'egg-roast': 'side',
   // Gravies
   'vegetable-kurma': 'gravy', 'mushroom-kurma': 'gravy', 'paneer-kurma': 'gravy',
-  'channa-masala': 'gravy', 'channa-gravy': 'gravy', 'rajka-masala': 'gravy',
+  'channa-masala': 'gravy', 'channa-gravy': 'gravy', 'rajma-masala': 'gravy',
   'paneer-butter-masala': 'gravy', 'paneer-masala': 'gravy', 'kadai-paneer': 'gravy',
   'palak-paneer': 'gravy', 'mushroom-masala': 'gravy', 'mushroom-gravy': 'gravy',
   'beetroot-masala': 'gravy', 'capsicum-masala': 'gravy', 'green-peas-masala': 'gravy',
@@ -364,7 +364,37 @@ export function areCompatible(recipe1: Recipe, recipe2: Recipe): boolean {
     if (!allowed.includes(accompGroup)) return false;
   }
 
+  // ─── Intra-meal ingredient overlap check ───
+  // Reject combinations where both dishes share a dominant ingredient,
+  // e.g. Tomato Rice + Tomato Soup (both tomato-heavy → repetitive).
+  if (sharesDominantIngredient(mainRecipe, accompRecipe)) return false;
+
   return true;
+}
+
+/**
+ * Ingredients that, when shared as a "must" ingredient in both recipes,
+ * make the pairing feel repetitive and ingredient-redundant.
+ */
+const REPETITIVE_SHARED = new Set([
+  'Tomato', 'Coconut', 'Lemon', 'Tamarind', 'Mushroom',
+  'Paneer', 'Beetroot', 'Spinach', 'Carrot', 'Capsicum',
+  'Cauliflower', 'Brinjal', 'Cabbage', 'Beans', 'Pumpkin',
+  'Ladies Finger',
+]);
+
+/**
+ * Checks whether two recipes share a "dominant" ingredient — one that
+ * defines the dish's identity (must-have in both). This prevents
+ * combinations like Tomato Rice + Tomato Soup.
+ */
+function sharesDominantIngredient(r1: Recipe, r2: Recipe): boolean {
+  const must1 = new Set(r1.must);
+  const must2 = new Set(r2.must);
+  for (const ing of must1) {
+    if (must2.has(ing) && REPETITIVE_SHARED.has(ing)) return true;
+  }
+  return false;
 }
 
 /**

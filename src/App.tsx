@@ -202,7 +202,7 @@ export default function App() {
         )}
       </main>
 
-      {!(view === 'planner' && plannerState.phase === 'loading') && <Footer />}
+      <Footer />
 
       <RecipeModal
         recipe={activeRecipe}

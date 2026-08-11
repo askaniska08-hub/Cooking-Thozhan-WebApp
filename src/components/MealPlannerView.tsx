@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useEffect, useRef, useState } from 'react';
+import { useCallback, useMemo, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Sparkles, Loader2, Check } from 'lucide-react';
 import { cn } from '@/utils';
@@ -52,6 +52,9 @@ export function MealPlannerView({ availableIngredients, onViewRecipe, onBack, on
   const { config, phase, result, forceInclude } = state;
   const resultsRef = useRef<HTMLDivElement>(null);
   const plannerTopRef = useRef<HTMLDivElement>(null);
+  const prevPhase = useRef<PlannerPhase>(phase);
+  // Track whether this is a full-plan generation (not a single swap)
+  const isFullGeneration = useRef(false);
 
   const update = useCallback(
     (patch: Partial<PlannerPersistedState>) => {
@@ -60,27 +63,31 @@ export function MealPlannerView({ availableIngredients, onViewRecipe, onBack, on
     [setState],
   );
 
-  // Scroll to results heading ONLY on loading→results transition (not on remount)
-  const prevPhase = useRef<PlannerPhase>(phase);
-  useEffect(() => {
-    if (prevPhase.current !== 'results' && phase === 'results' && resultsRef.current) {
-      const timer = setTimeout(() => {
+  // Scroll to results heading ONLY on loading→results transition from a full generation.
+  // Uses useLayoutEffect + requestAnimationFrame so the scroll fires after the results
+  // DOM has been painted but before the user sees the frame — no footer flash.
+  useLayoutEffect(() => {
+    if (prevPhase.current === 'loading' && phase === 'results' && isFullGeneration.current && resultsRef.current) {
+      const raf = requestAnimationFrame(() => {
         resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 100);
-      return () => clearTimeout(timer);
+        isFullGeneration.current = false;
+      });
+      return () => cancelAnimationFrame(raf);
     }
     prevPhase.current = phase;
   }, [phase]);
 
   // When entering loading, immediately scroll to the planner top so the
-  // viewport never drifts down to the footer / Meet the Creator section
+  // viewport never drifts down to the footer / Meet the Creator section.
+  // Uses 'auto' behavior for instant positioning — no smooth drift.
   useEffect(() => {
     if (phase === 'loading' && plannerTopRef.current) {
-      plannerTopRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      plannerTopRef.current.scrollIntoView({ behavior: 'auto', block: 'start' });
     }
   }, [phase]);
 
   const handleGenerate = useCallback(() => {
+    isFullGeneration.current = true;
     update({ phase: 'loading' });
     const ingredients = config.useAvailableIngredients ? availableIngredients : [];
     setTimeout(() => {
@@ -90,6 +97,7 @@ export function MealPlannerView({ availableIngredients, onViewRecipe, onBack, on
   }, [config, availableIngredients, forceInclude, update]);
 
   const handleRegenerate = useCallback(() => {
+    isFullGeneration.current = true;
     const newForce = result && result.unusedAvailableIngredients.length > 0 ? result.unusedAvailableIngredients : forceInclude;
     update({ phase: 'loading', forceInclude: newForce });
     const ingredients = config.useAvailableIngredients ? availableIngredients : [];
@@ -102,6 +110,8 @@ export function MealPlannerView({ availableIngredients, onViewRecipe, onBack, on
   const handleRegenerateMeal = useCallback(
     (dayIndex: number, mealType: MealType) => {
       if (!result) return;
+      // Single meal swap — NOT a full generation, don't trigger scroll
+      isFullGeneration.current = false;
       const ingredients = config.useAvailableIngredients ? availableIngredients : [];
       const newDays = regenerateSingleMeal(config, ingredients, dayIndex, mealType, result.days, forceInclude);
       update({ result: { ...result, days: newDays } });
@@ -112,6 +122,7 @@ export function MealPlannerView({ availableIngredients, onViewRecipe, onBack, on
   const handleSwapDish = useCallback(
     (dayIndex: number, mealType: MealType, dishIndex: number) => {
       if (!result) return;
+      isFullGeneration.current = false;
       const ingredients = config.useAvailableIngredients ? availableIngredients : [];
       const newDays = swapDish(config, ingredients, dayIndex, mealType, dishIndex, result.days);
       update({ result: { ...result, days: newDays } });
@@ -144,7 +155,7 @@ export function MealPlannerView({ availableIngredients, onViewRecipe, onBack, on
         </div>
       </div>
 
-      <AnimatePresence mode="wait">
+      <AnimatePresence>
         {phase === 'setup' && (
           <motion.div key="setup" exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.2 }}>
             <PlannerSetup
@@ -171,31 +182,31 @@ export function MealPlannerView({ availableIngredients, onViewRecipe, onBack, on
 
         {phase === 'results' && result && (
           <motion.div key="results" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
-            <div ref={resultsRef} className="scroll-mt-[140px]">
+            <div ref={resultsRef} className="scroll-mt-[140px] min-h-[60vh]">
               {/* Summary at top */}
               <div className="pt-6">
                 <PlannerSummary result={result} />
               </div>
-            </div>
 
-            {/* Day-by-day plan */}
-            <PlannerResults
-              days={result.days}
-              onViewRecipe={onViewRecipe}
-              onRegenerate={handleRegenerate}
-              onRegenerateMeal={handleRegenerateMeal}
-              onSwapDish={handleSwapDish}
-              config={config}
-            />
+              {/* Day-by-day plan */}
+              <PlannerResults
+                days={result.days}
+                onViewRecipe={onViewRecipe}
+                onRegenerate={handleRegenerate}
+                onRegenerateMeal={handleRegenerateMeal}
+                onSwapDish={handleSwapDish}
+                config={config}
+              />
 
-            {/* Shopping list */}
-            <ShoppingList items={result.shoppingList} />
+              {/* Shopping list */}
+              <ShoppingList items={result.shoppingList} />
 
-            {/* Regenerate button at bottom */}
-            <div className="flex justify-center pb-4">
-              <button onClick={handleRegenerate} className="btn-primary flex items-center gap-2 px-6 py-3 text-sm">
-                <Sparkles size={16} /> Regenerate Plan
-              </button>
+              {/* Regenerate button at bottom */}
+              <div className="flex justify-center pb-4">
+                <button onClick={handleRegenerate} className="btn-primary flex items-center gap-2 px-6 py-3 text-sm">
+                  <Sparkles size={16} /> Regenerate Plan
+                </button>
+              </div>
             </div>
           </motion.div>
         )}

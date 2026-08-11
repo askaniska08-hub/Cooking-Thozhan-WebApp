@@ -555,9 +555,18 @@ function filterByMealType(pool: ScoredRecipe[], mealType: MealType): ScoredRecip
   if (mealType === 'Snacks') {
     return pool.filter((s) => s.role === 'snack' || s.role === 'beverage' || s.recipe.category === 'Dal & Snacks');
   }
-  const exactMatch = pool.filter((s) => s.recipe.meal === mealType);
-  if (exactMatch.length > 0) return exactMatch;
-  return pool.filter((s) => ['main', 'bread', 'rice', 'gravy', 'side'].includes(s.role));
+  // Mains must match the meal type (Breakfast mains for breakfast, Lunch mains for lunch).
+  // Accompaniments (chutney, sambar, gravy, side, dal, rasam) are universal — they can
+  // accompany any meal type. Without this, Idli (Breakfast) can never pair with Sambar (Lunch).
+  const accompRoles: MealRole[] = ['chutney', 'gravy', 'side'];
+  const mains = pool.filter((s) => !accompRoles.includes(s.role) && s.recipe.meal === mealType);
+  const accomp = pool.filter((s) => accompRoles.includes(s.role));
+
+  if (mains.length > 0) return [...mains, ...accomp];
+
+  // Fallback: if no exact-match mains, allow any main/bread/rice
+  const fallbackMains = pool.filter((s) => ['main', 'bread', 'rice'].includes(s.role));
+  return [...fallbackMains, ...accomp];
 }
 
 // ─── Shopping Quantity System ───────────────────────────────────

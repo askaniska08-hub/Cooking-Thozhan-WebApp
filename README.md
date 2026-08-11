@@ -202,3 +202,92 @@ Discover a random recipe without manually browsing through the entire recipe col
 
 ---
 
+## 📖 Project Journey
+
+Cooking Thozhan began as a simple **Python-based recipe management project** while I was learning programming.
+
+As I developed my skills, I wanted to transform the idea into a practical web application that could solve a real-world problem.
+
+The project evolved into a modern responsive web application using **React, TypeScript, Vite, Tailwind CSS, and JSON-based recipe data**, with AI-assisted development using **Bolt.new**.
+
+It gradually grew from a basic recipe finder into a smart kitchen companion featuring:
+
+**Ingredient-based recipe matching → Recipe Details → Smart Shopping List → Favourites → TARA → Meal Planner → Nutritional Information**
+
+This project represents my journey from **Python fundamentals to modern web development and AI-assisted software engineering**.
+
+## 🌱 HealthTech Potential
+
+Cooking Thozhan extends beyond recipe discovery by supporting healthier and more informed meal planning.
+
+- 🥗 **Nutritional Awareness** — Provides nutritional information for meals and recipes.
+- 📅 **Structured Meal Planning** — Helps users organize meals across multiple days.
+- 🎯 **Goal-Based Planning** — Adapts meal recommendations according to selected planning goals.
+- 🍽️ **Meal Variety** — Encourages practical and varied meal combinations.
+- 🛒 **Ingredient-Aware Shopping** — Identifies missing ingredients needed for planned meals.
+- ♻️ **Smarter Ingredient Usage** — Encourages users to make use of ingredients already available at home.
+- 🧠 **Food Decision Support** — Reduces the everyday difficulty of deciding what to cook and eat.
+
+> ⚠️ Cooking Thozhan is a food and wellness application, not a medical or clinical system. Nutritional information is provided for general awareness and meal planning.
+
+## 🚀 Live Demo
+Experience the complete Cooking Thozhan workflow:
+🔗 **Website:** [Cooking Thozhan](https://cooking-thozhan-ai-r-8sgt.bolt.host/)
+
+
+## 💻 GitHub Repository
+
+🔗 **Source Code:** [Cooking-Thozhan-WebApp](https://github.com/askaniska08-hub/Cooking-Thozhan-WebApp)
+
+## 🛠️ Built With
+
+### Frontend
+- ⚛️ **React**
+- 🔷 **TypeScript**
+- ⚡ **Vite**
+- 🎨 **Tailwind CSS**
+
+### Application & Data
+- 📄 **JSON** — Recipe and ingredient data
+- ✨ **Framer Motion** — Animations and interactions
+- 🧩 **Lucide Icons** — Interface icons
+
+### AI-Assisted Development
+- 🤖 **Bolt.new** — AI-assisted application development
+
+### Project Origin
+- 🐍 **Python** — The original Cooking Thozhan concept began as a Python-based recipe project.
+
+  
+### 📌 Future Improvements
+
+```markdown
+## 📌 Future Improvements
+
+- 🤖 Further enhancement of TARA's conversational capabilities
+- 🌍 Multi-language support
+- 🔐 User authentication
+- ☁️ Cloud database integration
+- 🎙️ Voice-based cooking assistance
+- 🌎 Expanded international cuisines
+- 🎯 Deeper personalization
+- 📱 Dedicated mobile application
+- 🧠 Advanced food preference modelling
+
+> **Note:** Meal Planner, Smart Shopping List, and Nutritional Information are already implemented and are therefore not listed as future improvements.
+
+## ⭐ Support the Project
+
+If you like **Cooking Thozhan**, consider giving the repository a ⭐ **Star**!
+
+Your support helps motivate further development and improvement of the project.
+
+---
+## 👩‍💻 Developer
+
+### A S Kaniska
+
+Student & Developer
+
+- 🔗 **GitHub:** [askaniska08-hub](https://github.com/askaniska08-hub)
+- 🔗 **LinkedIn:** [A S Kaniska](https://www.linkedin.com/in/a-s-kaniska/)

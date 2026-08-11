@@ -2,7 +2,7 @@
 
 > **Your Smart Kitchen Companion**
 
-Cooking Thozhan is an AI-powered recipe finder that helps users discover delicious recipes using the ingredients they already have. It also features **Chef Tara**, an AI recipe assistant designed to guide users through inbuilt recipes.
+Cooking Thozhan is a smart kitchen companion that helps users discover recipes from ingredients they already have, build personalized multi-day meal plans, understand nutritional information, and generate shopping lists for missing ingredients.
 
 ---
 <h2>Why Cooking Thozhan ?</h2>

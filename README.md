@@ -259,9 +259,6 @@ Experience the complete Cooking Thozhan workflow:
 - 🐍 **Python** — The original Cooking Thozhan concept began as a Python-based recipe project.
 
   
-### 📌 Future Improvements
-
-```markdown
 ## 📌 Future Improvements
 
 - 🤖 Further enhancement of TARA's conversational capabilities
@@ -274,7 +271,7 @@ Experience the complete Cooking Thozhan workflow:
 - 📱 Dedicated mobile application
 - 🧠 Advanced food preference modelling
 
-> **Note:** Meal Planner, Smart Shopping List, and Nutritional Information are already implemented and are therefore not listed as future improvements.
+
 
 ## ⭐ Support the Project
 

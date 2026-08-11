@@ -1,182 +1,204 @@
 # 🍳 Cooking Thozhan
 
-> **Your Smart Kitchen Companion**
+### Your Smart Kitchen Recipe Companion
 
-Cooking Thozhan is a smart kitchen companion that helps users discover recipes from ingredients they already have, build personalized multi-day meal plans, understand nutritional information, and generate shopping lists for missing ingredients.
+Cooking Thozhan is an **AI-assisted smart kitchen and meal-planning web application** designed to solve the everyday problem:
 
----
-<h2>Why Cooking Thozhan ?</h2>
+> **"What should I cook today?"**
 
-<dl>
+Instead of starting with a recipe and asking users to buy everything required, Cooking Thozhan starts with **what users already have in their kitchen**.
 
-<dt><strong>🥕 Smart Ingredient Selection</strong></dt>
-<dd>
-Select the ingredients available in your kitchen and instantly discover recipes you can prepare, helping reduce food waste and simplify meal planning.
-</dd>
-<br>
-<dt><strong>🍽️ Personalized Recipe Recommendations</strong></dt>
-<dd>
-Receive carefully curated recipe suggestions based on your selected ingredients and explore dishes that match your preferences.
-</dd>
-<br>
-<dt><strong>🛒 Smart Grocery List Generator</strong></dt>
-<dd>
-Automatically identifies the missing ingredients for your chosen recipe and generates a printable and shareable grocery list for your next shopping trip.
-</dd>
-<br>
-<dt><strong>🤖 Chef Tara AI Assistant (Beta)</strong></dt>
-<dd>
-An AI-powered cooking companion that provides cooking guidance through built-in recommended questions. Chef Tara is actively being enhanced with smarter conversational capabilities and more personalized assistance.
-</dd>
-<br>
-<dt><strong>❤️ Favourite Recipes</strong></dt>
-<dd>
-Save your favourite recipes and access them anytime without searching again.
-</dd>
-<br>
-<dt><strong>🎲 Surprise Me</strong></dt>
-<dd>
-Can't decide what to cook? Let Cooking Thozhan randomly recommend a recipe and inspire your next meal.
-</dd>
-<br>
-<dt><strong>📱 Responsive & Modern Interface</strong></dt>
-<dd>
-Designed with a clean, responsive interface that provides a seamless experience across desktop, tablet, and mobile devices.
-</dd>
-<br>
-<dt><strong>⚡ Fast & Scalable</strong></dt>
-<dd>
-Built with a structured architecture that makes it easy to expand the recipe collection, introduce new features, and continuously improve the platform.
-</dd>
-<br>
-<dt><strong>🚀 Continuous Development</strong></dt>
-<dd>
-Cooking Thozhan is an evolving project with planned enhancements including a more capable Chef Tara, advanced recipe recommendations, nutrition insights, and additional smart cooking tools.
-</dd>
-</dl>
+It helps users discover suitable recipes, understand missing ingredients, explore complete meal combinations, plan meals across multiple days, view nutritional information, generate shopping lists, and interact with **TARA**, the suggestive cooking assistant.
 
 ---
 
-## 📸 Preview
+## 🎯 The Problem
 
-> <img width="1917" height="1011" alt="image" src="https://github.com/user-attachments/assets/9bd6f2ac-2090-4b61-ab02-ba1f4b938905" />
+Deciding what to cook can be harder than cooking itself.
 
----
+People commonly face:
 
-**🚀 Live Demo**
+- 🧠 Decision fatigue when planning daily meals
+- 🥬 Ingredients sitting unused in the kitchen
+- ⏱️ Limited time for meal preparation
+- 🎓 Students managing limited ingredients and budgets
+- 🏠 Families making daily meal decisions
+- 🌍 People living away from home who want familiar meals
+- 🥗 Difficulty understanding nutritional information
 
-🔗 **Website:** *[Cooking Thozhan](https://cooking-thozhan-ai-r-8sgt.bolt.host)*
+Traditional recipe platforms usually begin with:
 
----
+> **"What recipe do you want?"**
 
-## 🛠️ Built With
-- Python
-- React
-- TypeScript
-- Vite
-- Tailwind CSS
-- JSON
-- Bolt.new (AI-assisted development)
+Cooking Thozhan begins with:
 
----
-
-## 💡 How It Works
-
-1. Enter the ingredients available in your kitchen.
-2. Cooking Thozhan searches through its recipe collection.
-3. Matching recipes are displayed instantly.
-4. Users can:
-   - View complete recipes
-   - Save favourites
-   - Ask Chef Tara for cooking assistance
-   - Discover random recipes using "Surprise Me"
+> **"What ingredients do you already have?"**
 
 ---
 
-## 📂 Project Structure
+# 💡 The Solution
 
-```
-Cooking-Thozhan/
-│
-├── src/
-├── public/
-├── components/
-├── assets/
-├── data/
-├── package.json
-└── README.md
-```
+Cooking Thozhan acts as a **smart kitchen companion** connecting:
+
+**Ingredients → Recipes → Complete Meals → Meal Plans → Nutrition → Shopping**
+
+The application combines structured recipe intelligence, ingredient matching, meal compatibility logic, meal planning and AI-assisted cooking support.
 
 ---
 
-## ⚙️ Installation
+# ✨ Key Features
 
-Clone the repository
+## 🥬 Smart Ingredient Selection
 
-```bash
-git clone https://github.com/askaniska08-hub/Cooking-Thozhan-WebApp.git
-```
+Users can select ingredients already available in their kitchen.
 
-Navigate to the project
-
-```bash
-cd Cooking-Thozhan-WebApp
-```
-
-Install dependencies
-
-```bash
-npm install
-```
-
-Run locally
-
-```bash
-npm run dev
-```
+- Ingredient categories
+- Ingredient search
+- Multiple ingredient selection
+- Selected ingredient pills
+- Easy removal
 
 ---
 
-## 📌 Future Improvements
+## 🥘 Smart Recipe Matching
 
-- ✅ Improve Chef Tara AI responses
-- 🍽️ Meal Planner
-- 🛒 Grocery List Generator
-- 🌍 Multi-language Support
-- 🔐 User Authentication
-- ☁️ Cloud Database Integration
-- 📊 Nutritional Information
-- 🎙️ Voice Search
+Cooking Thozhan compares available ingredients against recipe requirements.
 
----
+Users can see:
 
-## 📖 Project Journey
-
-This project was developed using **AI-assisted development with Bolt.new**.
-
-Cooking Thozhan began as a simple Python-based recipe management project while I was learning programming. As my skills grew, I reimagined it as a modern web application using React, TypeScript, and Tailwind CSS with AI-assisted development in Bolt.new.
-
-The project evolved from a command-line application into a responsive recipe platform featuring ingredient-based recipe search, favourites, and Chef Tara, an AI recipe assistant.
-
-This project reflects my learning journey from Python fundamentals to modern web development and AI-assisted software engineering.
+- Match percentage
+- Available ingredients
+- Missing ingredients
+- Cooking time
+- Difficulty
+- Recipe category
+- Complete recipe details
 
 ---
 
-## 🤝 Contributing
+## 🍽️ Meal Compatibility Engine
 
-Contributions, feature requests, and suggestions are welcome!
+The Meal Planner understands that individual recipes are not always complete meals.
 
-Feel free to fork the repository and submit a pull request.
+It considers:
+
+- Main dishes
+- Staples
+- Gravies / curries
+- Side dishes
+- Accompaniments
+- Snacks
+
+For example:
+
+### ❌ Poor combination
+
+**Breakfast:**  
+Potato Masala
+
+### ✅ Practical combination
+
+**Breakfast:**  
+Chapathi + Gravy
+
+This helps generate meals that are more realistic and suitable for everyday cooking.
 
 ---
 
-## 👨‍💻 Developer
+## 📅 AI-Assisted Meal Planner
 
-**A S Kaniska**
+Users can generate multi-day meal plans based on their available ingredients and selected preferences.
 
-- GitHub: https://github.com/askaniska08-hub
-- LinkedIn: https://www.linkedin.com/in/a-s-kaniska/
+The planner considers:
+
+- Meal compatibility
+- Ingredient availability
+- Meal variety
+- Ingredient reuse
+- Cooking practicality
+- User goals
+- Nutritional information where available
+
+Example:
+
+**MONDAY**
+
+🌅 Breakfast  
+Idli + Chutney
+
+☀️ Lunch  
+Rice + Sambar + Vegetable Poriyal
+
+🌙 Dinner  
+Chapati + Vegetable Kurma
+
+The goal is to generate **realistic meal combinations instead of random individual recipes**.
 
 ---
 
-### ⭐ If you like this project, consider giving it a star!
+## 🥗 Nutritional Information
+
+Recipes and meal plans provide nutritional information where available.
+
+Examples include:
+
+- 🔥 Calories
+- 💪 Protein
+- 🌾 Carbohydrates
+- 🥑 Fat
+- 🌿 Fibre
+
+Nutrition information is intended for **general awareness and meal planning**.
+
+> ⚠️ Cooking Thozhan is not a medical or clinical system and does not provide medical diagnosis or treatment.
+
+---
+
+## 🛒 Smart Shopping List
+
+Cooking Thozhan identifies ingredients missing from selected recipes and meal plans.
+
+Users can generate a shopping list containing only required missing ingredients.
+
+The list can be:
+
+- 📋 Copied
+- 📤 Shared
+- 🖨️ Printed
+
+---
+
+## 🤖 TARA — Suggestive Cooking Assistant
+
+TARA is Cooking Thozhan's AI-assisted cooking companion.
+
+TARA can assist with:
+
+- Recipe-related questions
+- Cooking guidance
+- Recipe suggestions
+- Cooking tips
+- Food-related assistance
+
+TARA complements the application's recipe and meal-planning systems.
+
+---
+
+## ❤️ Favourite Recipes
+
+Save recipes that you want to access again later.
+
+---
+
+## 🕒 Recently Viewed
+
+Keep track of recently opened recipes for quick access.
+
+---
+
+## 🎲 Surprise Me
+
+Discover a random recipe without manually browsing through the entire recipe collection.
+
+---
+

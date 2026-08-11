@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Sparkles, Loader2 } from 'lucide-react';
+import { ArrowLeft, Sparkles, Loader2, Check } from 'lucide-react';
+import { cn } from '@/utils';
 import type { PlannerConfig, PlannerResult, RecipeWithMatch, MealType } from '@/types';
 import { generateMealPlan, regenerateSingleMeal, swapDish } from '@/services/mealPlanner';
 import { PlannerSetup } from './PlannerSetup';
@@ -111,10 +112,10 @@ export function MealPlannerView({ availableIngredients, onViewRecipe, onBack, on
 
   const loadingMessages = useMemo(
     () => [
-      'Analyzing your ingredients...',
-      'Finding the best recipe combinations...',
-      'Optimizing for food waste reduction...',
-      'Building your personalized plan...',
+      { icon: '🥗', text: 'Balancing your meals' },
+      { icon: '🥘', text: 'Finding compatible dishes' },
+      { icon: '🌱', text: 'Using your available ingredients' },
+      { icon: '💚', text: 'Checking your preferences' },
     ],
     [],
   );
@@ -194,20 +195,35 @@ export function MealPlannerView({ availableIngredients, onViewRecipe, onBack, on
   );
 }
 
-function LoadingAnimation({ messages }: { messages: string[] }) {
-  const [msgIdx, setMsgIdx] = useState(0);
+function LoadingAnimation({ messages }: { messages: { icon: string; text: string }[] }) {
+  const [completedIdx, setCompletedIdx] = useState(-1);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setMsgIdx((prev) => (prev + 1) % messages.length);
-    }, 800);
+      setCompletedIdx((prev) => {
+        if (prev >= messages.length - 1) return prev;
+        return prev + 1;
+      });
+    }, 380);
     return () => clearInterval(interval);
   }, [messages.length]);
 
   return (
-    <div className="flex flex-col items-center gap-6">
-      {/* Animated ring */}
-      <div className="relative h-24 w-24">
+    <div className="flex flex-col items-center gap-8">
+      {/* Heading */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="text-center"
+      >
+        <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-sm font-bold text-primary">
+          <Sparkles size={16} /> Creating your personalized meal plan...
+        </div>
+      </motion.div>
+
+      {/* Animated cooking indicator */}
+      <div className="relative h-20 w-20">
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
@@ -219,23 +235,56 @@ function LoadingAnimation({ messages }: { messages: string[] }) {
           className="absolute inset-3 rounded-full border-4 border-accent/20 border-b-accent"
         />
         <div className="absolute inset-0 grid place-items-center">
-          <span className="text-3xl">🍳</span>
+          <span className="text-2xl">🍳</span>
         </div>
       </div>
 
-      <AnimatePresence mode="wait">
-        <motion.p
-          key={msgIdx}
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -8 }}
-          transition={{ duration: 0.3 }}
-          className="flex items-center gap-2 font-display text-sm font-semibold text-gray-600 dark:text-gray-300"
-        >
-          <Loader2 size={14} className="animate-spin text-primary" />
-          {messages[msgIdx]}
-        </motion.p>
-      </AnimatePresence>
+      {/* Progress messages */}
+      <div className="flex flex-col items-center gap-3">
+        {messages.map((msg, idx) => {
+          const isDone = idx <= completedIdx;
+          const isCurrent = idx === completedIdx + 1;
+          return (
+            <motion.div
+              key={idx}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{
+                opacity: idx <= completedIdx + 1 ? 1 : 0.3,
+                x: 0,
+              }}
+              transition={{ duration: 0.3 }}
+              className="flex items-center gap-3"
+            >
+              <span className="text-lg">{msg.icon}</span>
+              <span
+                className={cn(
+                  'text-sm font-semibold transition-colors duration-300',
+                  isDone
+                    ? 'text-accent'
+                    : isCurrent
+                      ? 'text-primary'
+                      : 'text-gray-400 dark:text-gray-500',
+                )}
+              >
+                {msg.text}
+              </span>
+              {isDone && (
+                <motion.span
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                  className="text-accent"
+                >
+                  <Check size={16} />
+                </motion.span>
+              )}
+              {isCurrent && (
+                <Loader2 size={14} className="animate-spin text-primary" />
+              )}
+            </motion.div>
+          );
+        })}
+      </div>
     </div>
   );
 }

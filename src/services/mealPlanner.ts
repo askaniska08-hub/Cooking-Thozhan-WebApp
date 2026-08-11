@@ -6,6 +6,7 @@ import {
   COMPATIBLE_ACCOMPANIMENTS,
   NEEDS_ACCOMPANIMENT,
   COMPLETE_STANDALONE,
+  ACCOMPANIMENT_ROLES,
   maxAccompaniments,
 } from '@/data/mealRoles';
 import type {

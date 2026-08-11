@@ -200,7 +200,7 @@ function scoreRecipe(
   cuisineUsed: Map<string, number>,
   carbUsed: Map<string, number>,
 ): ScoredRecipe | null {
-  const status = getIngredientStatus(recipe.ingredients, available);
+  const status = getIngredientStatus(recipe.ingredients, available, recipe.must);
   if (status.matchPercentage < MIN_MATCH_THRESHOLD) return null;
 
   const role = getMealRole(recipe);

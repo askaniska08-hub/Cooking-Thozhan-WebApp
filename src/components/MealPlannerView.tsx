@@ -63,19 +63,22 @@ export function MealPlannerView({ availableIngredients, onViewRecipe, onBack, on
     [setState],
   );
 
-  // Scroll to Meal Planner results ONLY on loading→results transition from a full generation.
-  // Uses double-RAF so the results DOM is fully painted before scrolling.
-  // This scroll is completely contained within the Meal Planner — it targets
-  // mealPlanResultsRef which is only rendered inside the planner view, and
-  // never touches TARA/chat state, scroll, or focus.
+  // Scroll to top immediately when generation starts (loading phase).
+  // Also scroll to results when they appear after a full generation.
+  // Both use window.scrollTo directly — the app uses document-level scrolling.
   useLayoutEffect(() => {
-    if (prevPhase.current === 'loading' && phase === 'results' && isFullGeneration.current && mealPlanResultsRef.current) {
-      // Double-RAF: first frame commits the DOM, second frame ensures layout is stable
+    // A) On entering loading: instant scroll to planner top
+    if (phase === 'loading') {
+      window.scrollTo({ top: 0, behavior: 'auto' });
+    }
+
+    // B) On loading→results transition from full generation: scroll to results
+    if (prevPhase.current === 'loading' && phase === 'results' && isFullGeneration.current) {
       let raf1: number;
       let raf2: number;
       raf1 = requestAnimationFrame(() => {
         raf2 = requestAnimationFrame(() => {
-          mealPlanResultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          window.scrollTo({ top: 0, behavior: 'smooth' });
           isFullGeneration.current = false;
         });
       });
@@ -84,16 +87,8 @@ export function MealPlannerView({ availableIngredients, onViewRecipe, onBack, on
         cancelAnimationFrame(raf2);
       };
     }
-    prevPhase.current = phase;
-  }, [phase]);
 
-  // When entering loading, immediately scroll to the planner top so the
-  // viewport never drifts down to the footer / Meet the Creator section.
-  // Uses 'auto' behavior for instant positioning — no smooth drift.
-  useEffect(() => {
-    if (phase === 'loading' && plannerTopRef.current) {
-      plannerTopRef.current.scrollIntoView({ behavior: 'auto', block: 'start' });
-    }
+    prevPhase.current = phase;
   }, [phase]);
 
   const handleGenerate = useCallback(() => {
@@ -184,7 +179,7 @@ export function MealPlannerView({ availableIngredients, onViewRecipe, onBack, on
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="flex min-h-[60vh] flex-col items-center justify-center px-4"
+            className="flex min-h-screen flex-col items-center justify-center px-4"
           >
             <LoadingAnimation messages={loadingMessages} />
           </motion.div>

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useLayoutEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { SlidersHorizontal, Sparkles } from 'lucide-react';
 import { INGREDIENTS, CATEGORY_META } from '@/data/ingredients';
@@ -21,6 +21,13 @@ interface IngredientSelectorProps {
 export function IngredientSelector({ selected, onToggle, onClear, onFind, returnToPlanner }: IngredientSelectorProps) {
   const [query, setQuery] = useState('');
   const [activeCat, setActiveCat] = useState<IngredientCategory | 'All'>('All');
+
+  // Scroll to top when entering the Meal Planner's ingredient-selection stage
+  useLayoutEffect(() => {
+    if (returnToPlanner) {
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    }
+  }, [returnToPlanner]);
 
   const selectedSet = useMemo(() => new Set(selected), [selected]);
 

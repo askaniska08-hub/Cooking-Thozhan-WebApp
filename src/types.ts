@@ -133,7 +133,7 @@ export interface PlannerConfig {
   meals: MealType[];
   servings: 1 | 2 | 4 | 6;
   useAvailableIngredients: boolean;
-  dietType: DietType;
+  dietTypes: DietType[];
   nutritionPrefs: NutritionPref[];
   exclusions: AllergenExclusion[];
   customExclusions: string[];

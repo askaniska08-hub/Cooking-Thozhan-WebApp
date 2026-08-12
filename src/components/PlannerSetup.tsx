@@ -28,7 +28,7 @@ export function PlannerSetup({ config: rawConfig, onChange, onGenerate, availabl
     meals: rawConfig.meals ?? ['Breakfast', 'Lunch', 'Dinner'],
     servings: rawConfig.servings ?? 2,
     useAvailableIngredients: rawConfig.useAvailableIngredients ?? true,
-    dietType: rawConfig.dietType ?? 'veg',
+    dietTypes: rawConfig.dietTypes ?? ['veg'],
     nutritionPrefs: rawConfig.nutritionPrefs ?? [],
     exclusions: rawConfig.exclusions ?? [],
     customExclusions: rawConfig.customExclusions ?? [],
@@ -241,11 +241,19 @@ export function PlannerSetup({ config: rawConfig, onChange, onGenerate, availabl
       <Section title="Dietary Preference" emoji="🥗">
         <div className="flex flex-wrap gap-3">
           {DIET_META.map((d) => {
-            const active = config.dietType === d.value;
+            const active = config.dietTypes.includes(d.value);
             return (
               <button
                 key={d.value}
-                onClick={() => onChange({ ...config, dietType: d.value as DietType })}
+                onClick={() => {
+                  const has = config.dietTypes.includes(d.value);
+                  onChange({
+                    ...config,
+                    dietTypes: has
+                      ? config.dietTypes.filter((t) => t !== d.value)
+                      : [...config.dietTypes, d.value as DietType],
+                  });
+                }}
                 className={cn(
                   'flex items-center gap-2 rounded-2xl border-2 px-5 py-3 font-bold transition-all',
                   active

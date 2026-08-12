@@ -69,17 +69,20 @@ function isExcluded(recipe: Recipe, config: PlannerConfig): boolean {
       if (bannedSet.has(normalizeIngredient(ing))) return true;
     }
   }
-  // Diet type — hard filter
-  if (config.dietType === 'veg' && !recipe.veg) return true;
-  if (config.dietType === 'vegan') {
-    if (!recipe.veg) return true;
-    const veganBanned = new Set(['Milk', 'Curd', 'Paneer', 'Butter', 'Ghee', 'Cheese', 'Egg'].map(normalizeIngredient));
-    for (const ing of recipe.ingredients) {
-      if (veganBanned.has(normalizeIngredient(ing))) return true;
+  // Diet type — hard filter (all selected diets must be satisfied)
+  const dietTypes = config.dietTypes ?? (config.dietType ? [config.dietType] : []);
+  for (const dt of dietTypes) {
+    if (dt === 'veg' && !recipe.veg) return true;
+    if (dt === 'vegan') {
+      if (!recipe.veg) return true;
+      const veganBanned = new Set(['Milk', 'Curd', 'Paneer', 'Butter', 'Ghee', 'Cheese', 'Egg'].map(normalizeIngredient));
+      for (const ing of recipe.ingredients) {
+        if (veganBanned.has(normalizeIngredient(ing))) return true;
+      }
     }
-  }
-  if (config.dietType === 'egg' && !recipe.veg && !recipe.ingredients.some((i) => normalizeIngredient(i) === 'egg')) {
-    return true;
+    if (dt === 'egg' && !recipe.veg && !recipe.ingredients.some((i) => normalizeIngredient(i) === 'egg')) {
+      return true;
+    }
   }
   return false;
 }

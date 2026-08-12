@@ -15,7 +15,7 @@ export const DEFAULT_PLANNER_CONFIG: PlannerConfig = {
   meals: ['Breakfast', 'Lunch', 'Dinner'],
   servings: 2,
   useAvailableIngredients: true,
-  dietType: 'veg',
+  dietTypes: ['veg'],
   nutritionPrefs: [],
   exclusions: [],
   customExclusions: [],
@@ -62,31 +62,43 @@ export function MealPlannerView({ availableIngredients, onViewRecipe, onBack, on
     [setState],
   );
 
-  // 1. Instant scroll-to-top before paint when entering loading phase.
+  // 0. Scroll to top on mount — handles navigation to planner and browser refresh.
+  //    Overrides browser scroll restoration while the planner is active.
+  useLayoutEffect(() => {
+    const prevRestoration = history.scrollRestoration;
+    history.scrollRestoration = 'manual';
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    return () => {
+      history.scrollRestoration = prevRestoration;
+    };
+  }, []);
+
+  // 1. Instant scroll-to-top before paint when entering loading or results-after-generation.
   useLayoutEffect(() => {
     if (phase === 'loading') {
       window.scrollTo({ top: 0, behavior: 'auto' });
     }
-  }, [phase]);
-
-  // 2. Re-assert scroll after paint to counter layout shifts from AnimatePresence exit animations.
-  useEffect(() => {
-    if (phase !== 'loading') return;
-    window.scrollTo({ top: 0, behavior: 'auto' });
-    const timeout = setTimeout(() => {
-      window.scrollTo({ top: 0, behavior: 'auto' });
-    }, 300);
-    return () => clearTimeout(timeout);
-  }, [phase]);
-
-  // 3. Scroll to top when results appear after a full generation.
-  useLayoutEffect(() => {
     if (phase === 'results' && isFullGeneration.current) {
-      const raf = requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, behavior: 'auto' });
+    }
+  }, [phase]);
+
+  // 2. Re-assert scroll after paint to counter layout shifts from AnimatePresence transitions.
+  useEffect(() => {
+    if (phase === 'loading') {
+      window.scrollTo({ top: 0, behavior: 'auto' });
+      const timeout = setTimeout(() => {
         window.scrollTo({ top: 0, behavior: 'auto' });
-      });
-      isFullGeneration.current = false;
-      return () => cancelAnimationFrame(raf);
+      }, 300);
+      return () => clearTimeout(timeout);
+    }
+    if (phase === 'results' && isFullGeneration.current) {
+      window.scrollTo({ top: 0, behavior: 'auto' });
+      const timeout = setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: 'auto' });
+        isFullGeneration.current = false;
+      }, 300);
+      return () => clearTimeout(timeout);
     }
   }, [phase]);
 

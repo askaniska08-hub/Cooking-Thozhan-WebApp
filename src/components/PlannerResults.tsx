@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Clock, Flame, ChefHat, ArrowRight, RefreshCw, Repeat, AlertCircle } from 'lucide-react';
+import { Clock, Flame, ChefHat, ArrowRight, RefreshCw, Repeat, AlertCircle, Sparkles } from 'lucide-react';
 import type { PlannedDay, MealType, RecipeWithMatch, PlannedDish, PlannerConfig } from '@/types';
 import { getMealEmoji } from '@/services/mealPlanner';
 import { roleLabel } from '@/data/mealRoles';
@@ -204,6 +204,20 @@ function DishRow({
           </span>
           <span className="font-bold text-primary">{dish.matchPercent}% match</span>
         </div>
+
+        {dish.explanation && dish.explanation.reasons.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-1">
+            {dish.explanation.reasons.map((reason, i) => (
+              <span
+                key={i}
+                className="inline-flex items-center gap-1 rounded-md bg-accent/8 px-2 py-0.5 text-[10px] font-medium text-accent-600 dark:bg-accent/10 dark:text-accent"
+              >
+                <Sparkles size={9} className="shrink-0" />
+                {reason}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Action buttons */}

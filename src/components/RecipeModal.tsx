@@ -8,6 +8,7 @@ import type { RecipeWithMatch } from '@/types';
 import { Stars } from './ui/Stars';
 import { RippleButton } from './ui/RippleButton';
 import { cn, pluralize, getIngredientStatus } from '@/utils';
+import { printHtml } from '@/utils/print';
 
 interface RecipeModalProps {
   recipe: RecipeWithMatch | null;
@@ -69,13 +70,9 @@ export function RecipeModal({ recipe, selectedIngredients, isFavorite, onClose, 
 
   const printShoppingList = () => {
     if (!recipe || missing.length === 0) return;
-    const win = window.open('', '_blank', 'width=400,height=600');
-    if (!win) return;
     const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] ?? c));
-    win.document.write(`<html><head><title>Shopping List — ${esc(recipe.name)}</title><style>body{font-family:system-ui,sans-serif;padding:32px}h1{font-size:20px}ul{font-size:16px;line-height:1.8}</style></head><body><h1>Shopping List — ${esc(recipe.name)}</h1><ul>${missing.map((m) => `<li>${esc(m)}</li>`).join('')}</ul></body></html>`);
-    win.document.close();
-    win.focus();
-    win.print();
+    const bodyHtml = `<h1>Shopping List — ${esc(recipe.name)}</h1><ul>${missing.map((m) => `<li>${esc(m)}</li>`).join('')}</ul>`;
+    printHtml(`Shopping List — ${recipe.name}`, bodyHtml);
   };
 
   const modalRef = useRef<HTMLDivElement>(null);

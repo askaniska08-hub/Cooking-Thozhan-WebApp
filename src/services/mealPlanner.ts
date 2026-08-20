@@ -117,13 +117,18 @@ function estimateNutrition(recipe: Recipe): MealNutrition {
   const proteinBoost = recipe.ingredients.some((i) => PROTEIN_RICH_INGREDIENTS.has(normalizeIngredient(i))) ? 5 : 0;
   const scale = recipe.servings > 0 ? 1 / Math.max(1, recipe.servings / 2) : 1;
   return {
-    calories: Math.round(base.calories * scale),
-    protein: Math.round((base.protein + proteinBoost) * scale),
-    carbs: Math.round(base.carbs * scale),
-    fat: Math.round(base.fat * scale),
-    fiber: Math.round(base.fiber * scale),
+    calories: safeRound(base.calories * scale),
+    protein: safeRound((base.protein + proteinBoost) * scale),
+    carbs: safeRound(base.carbs * scale),
+    fat: safeRound(base.fat * scale),
+    fiber: safeRound(base.fiber * scale),
     isEstimated: true,
   };
+}
+
+function safeRound(n: number): number {
+  if (!Number.isFinite(n) || n < 0) return 0;
+  return Math.round(n);
 }
 
 function sumNutrition(dishes: PlannedDish[]): MealNutrition {
@@ -131,18 +136,18 @@ function sumNutrition(dishes: PlannedDish[]): MealNutrition {
   let allNull = true;
   for (const d of dishes) {
     const n = d.recipe.nutrition ?? estimateNutrition(d.recipe);
-    if (n.calories !== null) { calories += n.calories; allNull = false; }
-    if (n.protein !== null) protein += n.protein;
-    if (n.carbs !== null) carbs += n.carbs;
-    if (n.fat !== null) fat += n.fat;
-    if (n.fiber !== null) fiber += n.fiber;
+    if (n.calories !== null && Number.isFinite(n.calories)) { calories += n.calories; allNull = false; }
+    if (n.protein !== null && Number.isFinite(n.protein)) protein += n.protein;
+    if (n.carbs !== null && Number.isFinite(n.carbs)) carbs += n.carbs;
+    if (n.fat !== null && Number.isFinite(n.fat)) fat += n.fat;
+    if (n.fiber !== null && Number.isFinite(n.fiber)) fiber += n.fiber;
   }
   return {
-    calories: allNull ? null : calories,
-    protein: allNull ? null : protein,
-    carbs: allNull ? null : carbs,
-    fat: allNull ? null : fat,
-    fiber: allNull ? null : fiber,
+    calories: allNull ? null : safeRound(calories),
+    protein: allNull ? null : safeRound(protein),
+    carbs: allNull ? null : safeRound(carbs),
+    fat: allNull ? null : safeRound(fat),
+    fiber: allNull ? null : safeRound(fiber),
     isEstimated: true,
   };
 }

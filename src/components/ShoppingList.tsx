@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Copy, Printer, Share2, Download, Check, ShoppingCart } from 'lucide-react';
 import type { ShoppingListItem } from '@/types';
+import { printHtml } from '@/utils/print';
 
 interface ShoppingListProps {
   items: ShoppingListItem[];
@@ -29,11 +30,9 @@ export function ShoppingList({ items }: ShoppingListProps) {
   };
 
   const handlePrint = () => {
-    const w = window.open('', '_blank');
-    if (!w) return;
-    w.document.write(`<html><head><title>Shopping List</title><style>body{font-family:sans-serif;max-width:500px;margin:40px auto;padding:20px}h1{color:#FF7A00}li{padding:6px 0;font-size:16px}</style></head><body><h1>🛒 Shopping List</h1><ul>${items.map((i) => `<li><b>${i.ingredient}</b> — ${i.totalQuantity} (${i.recipeCount} ${i.recipeCount === 1 ? 'recipe' : 'recipes'})</li>`).join('')}</ul></body></html>`);
-    w.document.close();
-    w.print();
+    const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] ?? c));
+    const bodyHtml = `<h1>🛒 Shopping List</h1><ul>${items.map((i) => `<li><b>${esc(i.ingredient)}</b> — ${esc(i.totalQuantity)} (${i.recipeCount} ${i.recipeCount === 1 ? 'recipe' : 'recipes'})</li>`).join('')}</ul>`;
+    printHtml('Shopping List', bodyHtml);
   };
 
   const handleShare = async () => {
